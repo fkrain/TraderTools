@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>跟单台 · 产品规格与开发计划</title>
+<style>
+  :root {
+    --paper: #e7dcc8;
+    --sheet: #f6f0e4;
+    --ink: #1c1612;
+    --muted: #6d6256;
+    --line: #d4c6ae;
+    --cinnabar: #a33b32;
+    --cinnabar-soft: #f3e4df;
+    --pine: #1d4a38;
+    --pine-soft: #e5f0ea;
+    --brass: #8a5a12;
+    --brass-soft: #f6ecd8;
+    --slate: #3d4a55;
+    --slate-soft: #e8edf1;
+    --rail: #1b1714;
+    --rail-ink: #efe6d6;
+    --shadow: 0 18px 50px rgba(40, 24, 12, 0.12);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 500px at 10% -10%, rgba(163, 59, 50, 0.08), transparent 50%),
+      linear-gradient(180deg, #efe4d0 0%, var(--paper) 40%, #e3d5bd 100%);
+    font-family: "DengXian", "Microsoft YaHei UI", "PingFang SC", sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+  body::before {
+    content: "";
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.35'/></svg>");
+    mix-blend-mode: multiply;
+  }
+  a { color: var(--cinnabar); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .layout { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+  nav.rail {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: auto;
+    background: var(--rail);
+    color: var(--rail-ink);
+    padding: 28px 18px 40px;
+    z-index: 2;
+  }
+  .mark {
+    font-family: "Palatino Linotype", "Songti SC", SimSun, serif;
+    letter-spacing: 0.18em;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #c9a27a;
+  }
+  nav.rail h1 {
+    font-family: "Palatino Linotype", "Songti SC", SimSun, serif;
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.15;
+    margin: 8px 0 6px;
+  }
+  nav.rail .sub { color: #b5a894; font-size: 13px; margin-bottom: 22px; }
+  nav.rail a {
+    display: block;
+    color: #efe6d6;
+    text-decoration: none;
+    padding: 7px 10px;
+    border-left: 2px solid transparent;
+    font-size: 14px;
+  }
+  nav.rail a:hover, nav.rail a.is-on { border-left-color: var(--cinnabar); background: rgba(255,255,255,0.04); }
+  nav.rail .group {
+    margin: 16px 10px 6px;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: #8d7d68;
+  }
+  main { padding: 36px 48px 80px; max-width: 1080px; }
+  header.cover {
+    position: relative;
+    background: var(--sheet);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 36px 40px 28px;
+    margin-bottom: 28px;
+  }
+  header.cover::after {
+    content: "规格";
+    position: absolute;
+    right: 28px;
+    top: 24px;
+    width: 72px;
+    height: 72px;
+    border: 3px solid var(--cinnabar);
+    color: var(--cinnabar);
+    display: grid;
+    place-items: center;
+    font-family: "KaiTi", "STKaiti", serif;
+    font-size: 26px;
+    transform: rotate(8deg);
+    opacity: 0.85;
+  }
+  .kicker { letter-spacing: 0.22em; font-size: 12px; color: var(--cinnabar); }
+  header.cover h2 {
+    font-family: "Palatino Linotype", "Songti SC", SimSun, serif;
+    font-size: 42px;
+    line-height: 1.15;
+    font-weight: 600;
+    margin: 8px 0 10px;
+    max-width: 12em;
+  }
+  .lede { max-width: 68ch; color: #3a332c; font-size: 17px; }
+  .meta { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 18px; color: var(--muted); font-size: 13px; }
+  section {
+    background: rgba(246, 240, 228, 0.92);
+    border: 1px solid var(--line);
+    padding: 28px 32px 22px;
+    margin: 16px 0;
+  }
+  section h3 {
+    font-family: "Palatino Linotype", "Songti SC", SimSun, serif;
+    font-size: 28px;
+    margin: 0 0 8px;
+    font-weight: 600;
+  }
+  section h4 { margin: 22px 0 8px; font-size: 18px; }
+  p { margin: 8px 0 12px; }
+  .note {
+    border-left: 3px solid var(--cinnabar);
+    background: var(--cinnabar-soft);
+    padding: 10px 14px;
+    margin: 12px 0 16px;
+  }
+  .grid-3, .grid-2 { display: grid; gap: 12px; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: 1.2fr 0.8fr; }
+  .card {
+    border: 1px solid var(--line);
+    background: #fffaf2;
+    padding: 14px 14px 10px;
+  }
+  .card b { display: block; font-family: "Palatino Linotype", SimSun, serif; font-size: 18px; margin-bottom: 4px; }
+  .card span { color: var(--muted); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 8px 0 16px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 8px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  code, .mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 0.92em; }
+  .tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 99px;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+  .have { background: var(--pine-soft); color: var(--pine); }
+  .part { background: var(--brass-soft); color: var(--brass); }
+  .next { background: var(--cinnabar-soft); color: var(--cinnabar); }
+  .later { background: var(--slate-soft); color: var(--slate); }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
+  .tools input, .tools button {
+    font: inherit;
+    border: 1px solid var(--line);
+    background: #fffaf2;
+    color: var(--ink);
+    padding: 6px 10px;
+    border-radius: 4px;
+  }
+  .tools input { min-width: 220px; }
+  .tools button.is-on { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+  ol.waves { list-style: none; padding: 0; margin: 0; }
+  ol.waves > li {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 12px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+  }
+  .wave-no {
+    font-family: "Palatino Linotype", SimSun, serif;
+    font-size: 28px;
+    color: var(--cinnabar);
+    line-height: 1;
+  }
+  ul.tight { margin: 6px 0 8px; padding-left: 1.1em; }
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 10px 0 14px;
+  }
+  .flow i { font-style: normal; color: var(--muted); }
+  .pill {
+    border: 1px solid var(--ink);
+    padding: 6px 10px;
+    background: #fffaf2;
+    font-size: 14px;
+  }
+  footer { color: var(--muted); font-size: 13px; padding: 8px 4px 20px; }
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.rail { position: relative; height: auto; }
+    main { padding: 18px 14px 48px; }
+    .grid-3, .grid-2 { grid-template-columns: 1fr; }
+    header.cover h2 { font-size: 32px; }
+    header.cover::after { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="rail" aria-label="目录">
+    <div class="mark">FOLLOW DESK</div>
+    <h1>跟单台</h1>
+    <div class="sub">本地量化规格 · 2026-10-04</div>
+    <div class="group">总览</div>
+    <a href="#read">怎么读这份规格</a>
+    <a href="#position">产品定位</a>
+    <a href="#map">模块地图</a>
+    <a href="#gap">现状对照</a>
+    <div class="group">规格</div>
+    <a href="#grid">网格交易</a>
+    <a href="#program">交易程序</a>
+    <a href="#signals">条件、预警与模板</a>
+    <a href="#exec">执行、持仓与风控</a>
+    <a href="#backtest">回测</a>
+    <a href="#data">行情与数据边界</a>
+    <div class="group">计划</div>
+    <a href="#plan">开发波次</a>
+    <a href="#sources">资料来源</a>
+  </nav>
+  <main>
+    <header class="cover">
+      <div class="kicker">PRODUCT SPEC · WAVE PLAN</div>
+      <h2>把公开能力收成我们自己的柜台。</h2>
+      <p class="lede">这份文档根据水母量化帮助中心的公开功能说明，对照仓库里已经落地的 C++ 桌面端，整理成可实施的产品规格和后续开发顺序。行为按交易规则重写，字段用我们自己的名字。</p>
+      <div class="meta">
+        <span>代码基线：<span class="mono">native/grid</span> · <span class="mono">native/desk</span> · <span class="mono">web/index.html</span></span>
+        <span>对照日期：2026-10-04</span>
+        <span>运行形态：本机 WebView2 + 本地引擎</span>
+      </div>
+    </header>
+
+    <section id="read">
+      <h3>怎么读这份规格</h3>
+      <p>水母帮助中心把产品拆成网格、交易程序、策略模板、打板、轮动、回测几大块。我们只吸收其中能在本机闭环的交易规则，并按现有引擎的真实完成度排队。</p>
+      <div class="note">状态四种：<span class="tag have">已落地</span> 引擎和界面能用；<span class="tag part">半成品</span> 字段或近似逻辑在，规则还不完整；<span class="tag next">下一批</span> 紧接着要补；<span class="tag later">后置</span> 依赖行情、券商或产品形态，本阶段不做。</div>
+      <p>自动下单只有一条出口：策略产生委托意图，先过预授权和现有风控（交易日、时段、单笔金额、日委托、日亏暂停、同码冷却、半自动确认），再进纸面账户或同花顺模拟鼠键。</p>
+    </section>
+
+    <section id="position">
+      <h3>产品定位</h3>
+      <div class="grid-3">
+        <div class="card"><b>本机常驻</b><span>策略、行情轮询、委托都在这台电脑上。电脑关了，策略就停。先把这一台做成可靠柜台。</span></div>
+        <div class="card"><b>零代码工作流</b><span>用户拖选股器、股票池、策略单。网格是独立的区间引擎，也可以以后用策略单模板复刻回合制。</span></div>
+        <div class="card"><b>券商从已有通道长</b><span>纸面、同花顺模拟鼠键（EasyTHS）。新券商是新通道，不先做「全市场券商托管」。</span></div>
+      </div>
+      <h4>明确后置的能力</h4>
+      <p>云端 7×24 托管、手机改参数、微信服务号、策略社区、自动打新、国债逆回购、Level2 逐笔托管、全市场财务与舆情因子。这些在帮助中心里是产品外壳和数据采购，不进入前六波。</p>
+    </section>
+
+    <section id="map">
+      <h3>模块地图</h3>
+      <p>交易程序是三条积木的流水线。网格是另一条专用引擎，和流水线共用行情、风控、下单。</p>
+      <div class="flow" aria-label="交易程序流向">
+        <span class="pill">选股器 · 买什么</span><i>→</i>
+        <span class="pill">股票池 · 中转</span><i>→</i>
+        <span class="pill">策略单 · 何时买卖</span><i>→</i>
+        <span class="pill">下一池 / 结束</span>
+      </div>
+      <div class="grid-2">
+        <div>
+          <table>
+            <thead><tr><th>模块</th><th>职责</th><th>代码</th></tr></thead>
+            <tbody>
+              <tr><td>跟单</td><td>东财 / 雪球组合对照与同步</td><td class="mono">desk/follow</td></tr>
+              <tr><td>区间网格</td><td>基准价驱动的低吸高抛</td><td class="mono">grid/grid_engine</td></tr>
+              <tr><td>交易程序</td><td>选股器、池、策略单连线</td><td class="mono">desk/workflow_engine</td></tr>
+              <tr><td>预警 / 条件 / 止盈止损</td><td>单标的规则</td><td class="mono">desk/product</td></tr>
+              <tr><td>T+0 / 篮子 / 打板 / 公式</td><td>专用快捷策略</td><td class="mono">desk/desk_modules</td></tr>
+              <tr><td>风控与确认</td><td>所有自动单的闸门</td><td class="mono">RiskConfig</td></tr>
+              <tr><td>行情</td><td>腾讯、新浪、东财，失败降级</td><td class="mono">grid/quote_*</td></tr>
+              <tr><td>通道</td><td>纸面、同花顺模拟鼠键</td><td class="mono">app/broker · easyths</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <b>一条程序怎么跑</b>
+          <span>选股器按时刻或间隔，在自选、文件信号或行情条件里挑代码，写入下游池。策略单以秒级轮询池内代码，命中后按数量和报价类型发单，再把代码送进持仓池或止盈池。预授权关闭时只记日志。</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="gap">
+      <h3>现状对照</h3>
+      <div class="tools">
+        <input id="q" type="search" placeholder="筛选模块或能力" aria-label="筛选" />
+        <button type="button" data-f="all" class="is-on">全部</button>
+        <button type="button" data-f="have">已落地</button>
+        <button type="button" data-f="part">半成品</button>
+        <button type="button" data-f="next">下一批</button>
+        <button type="button" data-f="later">后置</button>
+      </div>
+      <table id="gap-table">
+        <thead><tr><th>能力</th><th>公开规则里的行为</th><th>我们</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr data-s="have"><td>跟单</td><td>跟踪外部组合调仓</td><td>东财、雪球组合，对照页与同步</td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="have"><td>百分比 / 价差网格</td><td>上涨 x% 或固定价差卖，下跌则买</td><td><span class="mono">by_price</span>、<span class="mono">sell_up_pct</span>、<span class="mono">buy_down_pct</span></td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="have"><td>基准价</td><td>成交或触发后重置下一对买卖价</td><td><span class="mono">last_price</span>，<span class="mono">use_order_price</span> 时用委托价回写</td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="have"><td>拐点</td><td>触价后等反弹或回落再下单</td><td><span class="mono">rebound_pct</span> / <span class="mono">pullback_pct</span>，可要求仍在网格外侧，可延迟确认</td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="part"><td>到价驱动 / 成交驱动</td><td>到价：一触价就推进，未成交也会生成下一对。成交：全成后以成交价作新基准</td><td><span class="mono">check_fill</span> 会挂起状态等确认；默认路径在发单当刻就推进。没有真实成交回报时，两种驱动还是同一条近似</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="part"><td>严格配对</td><td>买卖数量相等，卖出对上未平的买入价，保证该笔有价差</td><td><span class="mono">grid_match</span> + <span class="mono">match_buy_prices</span> 栈。未限制买卖数量必须相等，也没有「未配对笔数上限」</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="part"><td>宽松配对</td><td>不限制单笔数量，按总仓和成本整体配平</td><td>默认路径接近自由运行，没有按总成本配平</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="part"><td>区间上下限</td><td>价格跑出区间则暂停，回到区间再跑</td><td>上限 / 下限动作：暂停、清仓后暂停、清仓后停止。回到区间自动恢复尚未单独做</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="have"><td>底仓锁定</td><td>持仓降到下限停止卖出</td><td><span class="mono">reserve_base_shares</span></td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="part"><td>持仓上限</td><td>股数超过上限停止买入</td><td>有金额上限 <span class="mono">max_position_amount</span>，没有股数上限</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="part"><td>连续单边限制</td><td>连续买或连续卖 N 次后停这一侧，另一侧照常</td><td>只有连续买入 <span class="mono">max_buy_streak</span></td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="part"><td>跨格倍数</td><td>跳空高开 / 低开时，按跳空幅度除以网格步长决定份数</td><td><span class="mono">cross_buy_multiply</span> / <span class="mono">cross_sell_multiply</span> 按现价相对基准跨越的格数放大。没有「仅开盘跳空」开关，预埋单互斥也未做</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="part"><td>加仓倍数</td><td>跌到加仓线后买双份</td><td><span class="mono">buy_qty_multiple</span> 按上一笔数量乘倍数，不是价格线</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="next"><td>不配对 + 预埋单</td><td>接近网格价约 1.5% 时按网格价提前挂单，到价排队；另一侧成交则撤对侧；收盘撤。只在不配对模式可用。只适合逢低买、逢高卖</td><td>结构体有 <span class="mono">preorder_buy</span> / <span class="mono">preorder_sell</span>，引擎未读</td><td><span class="tag next">下一批</span></td></tr>
+          <tr data-s="next"><td>智能止盈与再开</td><td>高抛后按收益或价格清仓，价格回到某档再重新建仓</td><td>止盈止损是另一套单，网格内没有清仓后再武装</td><td><span class="tag next">下一批</span></td></tr>
+          <tr data-s="next"><td>止损线</td><td>跌破价位清仓，且需要人工授权</td><td>风控有半自动确认，网格没有独立止损价</td><td><span class="tag next">下一批</span></td></tr>
+          <tr data-s="next"><td>底仓卖光停止</td><td>持仓为 0 且价格在基准上方时停止，避免高位接回</td><td>卖出数量可以被底仓锁住，策略本身不会因此停止</td><td><span class="tag next">下一批</span></td></tr>
+          <tr data-s="next"><td>暂停高抛 / 暂停低吸</td><td>单侧停手，用于逐步建仓或逐步出货</td><td>无独立开关</td><td><span class="tag next">下一批</span></td></tr>
+          <tr data-s="next"><td>强制买卖数量</td><td>触发时优先用指定数量，留空则用默认每格数量</td><td>买卖数量是固定字段</td><td><span class="tag next">下一批</span></td></tr>
+          <tr data-s="have"><td>报价类型</td><td>对手价、追价、按场景定价</td><td>最新、市价、买一到买五、卖一到卖五，可加减分</td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="have"><td>交易时段</td><td>只在连续竞价窗口动作</td><td>网格与风控都有时段；节假日表可覆盖</td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="next"><td>网格回测</td><td>用 1 分钟数据按同一套规则回放，计费用、整手、T+0/T+1、跳空份数，并对比「不做网格」</td><td>无回测器</td><td><span class="tag next">下一批</span></td></tr>
+          <tr data-s="part"><td>交易程序画布</td><td>拖拽选股器、股票池、策略单并连线，预授权后自动下单</td><td>三种节点、连线、预授权、文件信号模板已有。条件只有价格、涨跌幅、时间、文件</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="next"><td>条件与或</td><td>条件组可全部满足，或任一满足</td><td>单条件</td><td><span class="tag next">下一批</span></td></tr>
+          <tr data-s="next"><td>表达式</td><td>四则、比较、AND/OR、括号；字段含最新价、昨收、五档价量</td><td>无表达式引擎</td><td><span class="tag next">下一批</span></td></tr>
+          <tr data-s="later"><td>技术指标因子</td><td>多周期 MA、MACD、KDJ、BOLL 等</td><td>无 K 线缓存</td><td><span class="tag later">后置</span></td></tr>
+          <tr data-s="later"><td>变品种投递</td><td>监控 A，把预设的 B 送进目标池再交易。用于正股与转债、ETF 与成分</td><td>池只存代码，没有 A→B 映射</td><td><span class="tag later">后置</span></td></tr>
+          <tr data-s="part"><td>打板</td><td>卖档扫空、涨停排单、大单封板、撤单。多条件为或</td><td>相对首次价涨幅阈值，每日一次</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="have"><td>止盈止损</td><td>固定价、成本百分比、移动回撤</td><td>三套都在 <span class="mono">StopRule</span></td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="have"><td>条件单</td><td>价格、时间、当日涨跌幅，一次性</td><td><span class="mono">CondOrder</span></td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="have"><td>预警</td><td>价格、涨跌幅、通达信信号文件，可只提醒或自动下单</td><td><span class="mono">AlertRule</span>，含北交所代码规范化</td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="part"><td>T+0</td><td>日内基准价上下买卖，可带尾盘回补</td><td>基准、轮次、冷却、时段、市价。无尾盘回补</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="have"><td>篮子</td><td>多标的按数量或权重一次下出</td><td><span class="mono">Basket</span></td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="part"><td>公式下单</td><td>通达信公式预警进自动买卖</td><td>按信号名匹配文件，不是公式求值</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="later"><td>轮动</td><td>池内排序，持有 N 只，定期换仓</td><td>无</td><td><span class="tag later">后置</span></td></tr>
+          <tr data-s="later"><td>五档扫空打板 / 逐笔大单</td><td>卖二至卖五量归零，或涨停价大单</td><td>行情结构有五档价，没有五档量，没有逐笔</td><td><span class="tag later">后置</span></td></tr>
+          <tr data-s="have"><td>风控闸门</td><td>预授权、交易时段、单笔与日限额</td><td>硬限制、半自动确认、同码冷却、日亏暂停、免责声明</td><td><span class="tag have">已落地</span></td></tr>
+          <tr data-s="part"><td>持仓同步</td><td>用券商真实持仓约束卖出和上限</td><td><span class="mono">position_shares</span> 由引擎自己加减</td><td><span class="tag part">半成品</span></td></tr>
+          <tr data-s="later"><td>云端与手机</td><td>关电脑后策略仍跑，手机改参数</td><td>本机进程</td><td><span class="tag later">后置</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="grid">
+      <h3>网格交易规格</h3>
+      <p>一条网格盯住一只证券。运行中始终维护一个基准价。默认按基准生成下一档买价和卖价。触发一侧后撤掉另一侧的意图，并用新基准进入下一轮。创建之后，驱动方式和配对方式不可改，避免同一条记录的成交对不上。</p>
+      <h4>驱动</h4>
+      <table>
+        <thead><tr><th>模式</th><th>字段</th><th>规则</th></tr></thead>
+        <tbody>
+          <tr><td>到价驱动</td><td class="mono">drive = touch</td><td>价格触及网格价就发单，并立刻把基准改成「触发价与当时可成交价里更有利的那个」。上一笔未成交也允许继续触发。买卖可能错配，统计用触发价，和真实成交价会偏离。</td></tr>
+          <tr><td>成交驱动</td><td class="mono">drive = fill</td><td>触及后发单，状态停在等待成交。仅当该笔全部成交，才用成交价作新基准，并生成下一对。部分成交不推进。撤单或废单则恢复等待，基准不动。</td></tr>
+        </tbody>
+      </table>
+      <p>现有 <span class="mono">check_fill</span> 只是「发单后先不改状态」。下一波要把它接到真实回报：纸面单立即视为成交；同花顺和文件单要等委托状态变成全部成交，再用成交均价调用现在的 <span class="mono">apply_fill</span>。</p>
+      <h4>配对</h4>
+      <table>
+        <thead><tr><th>模式</th><th>字段</th><th>规则</th></tr></thead>
+        <tbody>
+          <tr><td>不配对</td><td class="mono">pair = none</td><td>买卖各自按步长运行，不建立买价栈。只有这个模式可以开预埋单。</td></tr>
+          <tr><td>宽松</td><td class="mono">pair = loose</td><td>允许买卖数量不同，也允许手工补录份额。卖出时用持仓加权成本判断这笔是否还在网格利润里，不要求逐笔一对一。</td></tr>
+          <tr><td>严格</td><td class="mono">pair = strict</td><td>每格买卖数量必须相等。买入价入栈，卖出必须对着最早未平的买价，且价差达到一格才允许卖。未平笔数达到 <span class="mono">unpaired_limit</span> 后停止继续买，卖出不受这笔限制影响。</td></tr>
+        </tbody>
+      </table>
+      <h4>要补的参数</h4>
+      <table>
+        <thead><tr><th>参数</th><th>行为</th></tr></thead>
+        <tbody>
+          <tr><td>暂停低吸 / 暂停高抛</td><td>该侧不再发单，另一侧继续。用于单边建仓或单边减仓。</td></tr>
+          <tr><td>强制数量</td><td>大于 0 时本次触发用这个数量，否则用每格数量。</td></tr>
+          <tr><td>跳空份数</td><td>开盘价相对前基准的涨跌幅，除以该侧步长，向下取整得到份数，至少 1。与预埋单互斥：预埋单开启时跳空份数固定为 1。</td></tr>
+          <tr><td>连续卖出上限</td><td>与已有连续买入上限对称。到达后只停该侧。</td></tr>
+          <tr><td>股数上限</td><td>预估持仓超过该股数则停止买入。与金额上限同时生效，先碰到谁用谁。</td></tr>
+          <tr><td>卖光即停</td><td>卖出后持仓为 0，且最新价高于基准，策略改为停止。</td></tr>
+          <tr><td>止损价</td><td>跌破后生成一笔清仓卖出，强制走半自动确认，确认前网格暂停。</td></tr>
+          <tr><td>加仓价格线</td><td>最新价跌到该线，下一笔买入数量乘 2。和现有倍数可以并存，规格里只保留一个入口，避免两套倍数叠乘。</td></tr>
+          <tr><td>止盈清仓</td><td>条件是持仓收益率，或最新价。触发后卖出可卖数量，网格进入「等待再开」。再开价满足后恢复运行，基准改为再开成交价。</td></tr>
+          <tr><td>预埋单</td><td>仅 <span class="mono">pair = none</span>。最新价进入网格价上下 1.5% 带内时，按网格价挂限价单。价格离开带且未成交则撤。一侧成交后撤另一侧。15:00 前撤掉未成交预埋。拐点、止损不要走预埋。</td></tr>
+          <tr><td>回到区间</td><td>价格冲出上下限并因此暂停后，重新进入区间则自动回到运行，基准保持暂停前的值。</td></tr>
+        </tbody>
+      </table>
+      <h4>保持现有、只在界面上写清楚的部分</h4>
+      <ul class="tight">
+        <li>拐点：先触网格，再等从极点反弹或回落达到百分比，可选「成交价仍须优于原网格价」，可选最短确认秒数。</li>
+        <li>报价：买用卖档，卖用买档，可指定一至五档和价格偏移。</li>
+        <li>底仓股数、金额上限、交易时段、除权除息标记 <span class="mono">auto_xrxd</span>。</li>
+        <li>上下限动作继续用暂停、清仓暂停、清仓停止三档。</li>
+      </ul>
+    </section>
+
+    <section id="program">
+      <h3>交易程序规格</h3>
+      <p>一个交易程序是一张图：节点是选股器、股票池、策略单，边表示代码流向。名称会作为日志前缀。预授权关闭时，命中只记事件，不发单。</p>
+      <h4>三种节点</h4>
+      <table>
+        <thead><tr><th>节点</th><th>频率</th><th>输入</th><th>输出</th></tr></thead>
+        <tbody>
+          <tr><td>选股器</td><td>每天固定时刻一次，或 N 秒一次，默认偏慢</td><td>全市场列表、板块、上游池、自选、信号文件</td><td>写入下游池，或从上游池剔除</td></tr>
+          <tr><td>股票池</td><td>被动</td><td>手工代码、上游投递、自选导入</td><td>作为下游的监控范围。可附 A→B 映射，后置</td></tr>
+          <tr><td>策略单</td><td>最快 1 秒一轮，池子应保持小</td><td>上游池</td><td>先下单，再把代码送入下游池。可选触发后当日不再监控该代码</td></tr>
+        </tbody>
+      </table>
+      <h4>条件</h4>
+      <p>每个选股器或策略单有一组条件。组间关系是 <span class="mono">all</span>（全部成立）或 <span class="mono">any</span>（任一成立）。一条条件先支持比较表达式，再支持指标名。</p>
+      <p>第一版表达式只做行情快照能算出来的字段：最新价、昨收、开高低、涨跌幅、成交额、成交量、买一至买五价、卖一至卖五价。运算符：<span class="mono">+ - * /</span>、比较、括号、<span class="mono">AND</span>、<span class="mono">OR</span>。示例：<span class="mono">(CLOSE/PRE-1)*100 &gt;= 5 AND ASK1 &gt; 0</span>。</p>
+      <p>跨品种函数 <span class="mono">GETDATA[代码.市场, 字段]</span> 与指标函数放到指标波次。在那之前，正股监控转债用池映射表达，不进公式。</p>
+      <h4>委托</h4>
+      <p>策略单命中后读取：方向、数量或金额、报价类型（最新、对手一至五档、限价、涨停价、跌停价）。涨跌停价在没有官方价库时，用昨收和板块涨跌幅估算，并在日志标明是估算。</p>
+      <h4>内置模板，用同一套图生成</h4>
+      <ul class="tight">
+        <li>文件信号：已有 <span class="mono">make_file_signal_template</span>，保持。</li>
+        <li>价格条件、涨跌幅、到点一次。</li>
+        <li>止盈止损：持仓池进入后，成本跌破或涨过则卖出。</li>
+        <li>回合制网格：策略单表达「相对基准下跌买入、上涨卖出」，成交后改基准。用来补网格引擎覆盖不了的「先等指标、再走一格」。</li>
+        <li>均线、MACD、KDJ、布林：等分钟线落地后再生成，避免模板里写死还不能求值的因子。</li>
+      </ul>
+    </section>
+
+    <section id="signals">
+      <h3>条件、预警与专用策略</h3>
+      <p>这些页面已经能单独使用。后续只做和交易程序对齐的增量，避免两套条件语言。</p>
+      <table>
+        <thead><tr><th>模块</th><th>保持</th><th>下一步</th></tr></thead>
+        <tbody>
+          <tr><td>预警</td><td>价格、涨跌幅、信号文件；自动或仅提醒；冷却；一次或重复</td><td>文件信号能直接生成一条交易程序</td></tr>
+          <tr><td>条件单</td><td>价格、时间、当日涨跌幅，触发后结束</td><td>报价类型已经有，补涨停价、跌停价估算</td></tr>
+          <tr><td>止盈止损</td><td>价格、成本百分比、最高价回落</td><td>允许被策略单「卖出后进入」调用，而不是只在自己的列表里</td></tr>
+          <tr><td>T+0</td><td>基准、上下百分比、轮次、冷却、时段</td><td>尾盘把当日净卖出买回，或把净买入卖出。可转债与 ETF 标成 T+0 品种</td></tr>
+          <tr><td>打板</td><td>当日涨幅阈值，每日一次</td><td>有五档量之后再做卖档扫空；有逐笔之后再做大单封板和撤单</td></tr>
+          <tr><td>篮子</td><td>数量或权重一次下出</td><td>失败腿单独重试，不整篮回滚</td></tr>
+          <tr><td>公式文件</td><td>信号名匹配</td><td>与表达式引擎分开命名，避免用户以为本地已能跑通达信公式</td></tr>
+        </tbody>
+      </table>
+      <h4>打板的目标行为（数据到位之后）</h4>
+      <p>同一条规则里多种时机是「或」：卖五量空、卖四和卖五量空、卖二和卖三量空、最新价等于涨停价。大单封板和撤单依赖逐笔委托，单列一条数据源任务，不塞进网格波次。</p>
+    </section>
+
+    <section id="exec">
+      <h3>执行、持仓与风控</h3>
+      <p>网格成交驱动、预埋撤单、持仓上限，都依赖同一笔委托的生命周期。先定义状态，再改策略。</p>
+      <table>
+        <thead><tr><th>状态</th><th>含义</th><th>策略侧</th></tr></thead>
+        <tbody>
+          <tr><td>已报</td><td>通道接受</td><td>成交驱动保持等待；预埋单占用该侧</td></tr>
+          <tr><td>部成</td><td>部分成交</td><td>不推进基准。可配置超时撤剩余</td></tr>
+          <tr><td>已成</td><td>全部成交</td><td>用成交均价 <span class="mono">apply_fill</span></td></tr>
+          <tr><td>已撤 / 废单</td><td>没有继续成交的可能</td><td>清除等待，基准不变，该侧可以再次触发</td></tr>
+        </tbody>
+      </table>
+      <p>持仓以通道回报为准，引擎加减只作回报延迟时的估计。回报到达后覆盖 <span class="mono">position_shares</span>。卖出前用「可用」而不是「持仓」判断，避免 T+1 标的卖出当日买入。</p>
+      <p>风控保持硬限制：交易日、时段、单笔金额、日委托次数、日亏暂停、同码冷却、半自动确认。策略规格不得提供「关闭这些限制」的开关。预授权是交易程序级开关，确认栏是账户级开关，两层都过才发单。</p>
+      <p>价格笼子：限价超出当时允许的申报带时，把价格夹到带内再报，并在原因里写明夹价。精确带宽跟板块和时段，放在执行波次用昨收、涨跌停估算实现，官方价库后置。</p>
+    </section>
+
+    <section id="backtest">
+      <h3>回测</h3>
+      <p>第一套回测只服务网格，复用同一参数结构，禁止写第二套网格公式。输入是 1 分钟 K 线。输出是每笔成交、期末持仓、区间盈亏、最大净投入，以及一条「同样起点只持有底仓、不做网格」的对照。</p>
+      <ul class="tight">
+        <li>股票默认 T+1，ETF 与可转债按代码表标成 T+0。</li>
+        <li>数量按整手取整，资金不够就少买或不买。</li>
+        <li>费用用佣金和印花税参数，可勾选免五。</li>
+        <li>跳空开盘按跳空份数规则处理。</li>
+        <li>成交假设：分钟内价格触及网格价则按网格价成交。这是上限估计，界面上要写明。</li>
+      </ul>
+      <p>轮动回测和多周期指标回测放到指标与轮动波次，不和网格回测绑在一起。</p>
+    </section>
+
+    <section id="data">
+      <h3>行情与数据边界</h3>
+      <table>
+        <thead><tr><th>现在有</th><th>规格里怎么用</th><th>还缺</th></tr></thead>
+        <tbody>
+          <tr><td>最新价、买一至买五、卖一至卖五价格</td><td>网格报价、表达式第一版</td><td>五档数量。没有量就做不了「卖档被扫空」</td></tr>
+          <tr><td>腾讯 / 新浪 / 东财，失败降级</td><td>继续作为默认源，轮询间隔保持秒级</td><td>毫秒触发、逐笔成交、逐笔委托</td></tr>
+          <tr><td>通达信信号文件</td><td>预警、公式任务、选股器来源</td><td>公式引擎本身</td></tr>
+          <tr><td>本地 JSON：策略、风控、工作流、事件</td><td>继续落在 <span class="mono">data/</span>，写入前保留 bak</td><td>分钟 K 缓存、委托状态表</td></tr>
+        </tbody>
+      </table>
+      <p>Level2 和财务、舆情因子是采购和存储问题。规格把它们标成后置，避免在没有数据时先写一套空因子名。</p>
+    </section>
+
+    <section id="plan">
+      <h3>开发波次</h3>
+      <p>顺序按依赖排。每一波结束都要能用 <span class="mono">python tools/smoke_product.py</span> 加上该波列出的剧本通过。界面改动要在桌面里点通创建、暂停、触发、日志。</p>
+      <ol class="waves">
+        <li>
+          <div class="wave-no">01</div>
+          <div>
+            <h4>网格规则补齐</h4>
+            <p>在 <span class="mono">Strategy</span> 上补驱动、配对、暂停单侧、强制数量、连续卖出、股数上限、卖光即停、止损价、止盈清仓与再开、回到区间。预埋单字段先保存，行为放到波次 02。界面区间交易页把这些开关露出来，创建后锁定驱动和配对。</p>
+            <ul class="tight">
+              <li>验收：纸面行情脚本覆盖跳空两格、连续买入到上限后仍可卖、底仓锁死卖出、跌破止损只产生待确认、止盈后回到再开价才重新发买。</li>
+              <li>触及文件：<span class="mono">native/grid/include/grid/types.hpp</span>、<span class="mono">grid_engine.cpp</span>、区间交易页。</li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <div class="wave-no">02</div>
+          <div>
+            <h4>委托生命周期</h4>
+            <p>订单目录增加状态和成交均价。纸面通道立刻已成。同花顺与文件桥在能读到回报前，成交驱动保持等待并在界面显示「未确认」，禁止静默推进基准。预埋单在不配对模式下按 1.5% 带挂出和撤销。</p>
+            <ul class="tight">
+              <li>验收：模拟一笔部成不推进、全部成交后基准等于成交均价、撤单后同一网格价可以再次触发、15:00 撤预埋。</li>
+              <li>持仓回报能覆盖引擎估计值；T+1 代码当日买入不可卖。</li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <div class="wave-no">03</div>
+          <div>
+            <h4>网格回测</h4>
+            <p>分钟线输入，调用与实盘相同的触发函数，输出成交表和「只拿底仓」对照。先支持股票、ETF、可转债三类代码的 T 规则和费用。</p>
+            <ul class="tight">
+              <li>验收：固定一分钟序列，手算三笔低吸高抛，回测数量、价格、剩余底仓一致。</li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <div class="wave-no">04</div>
+          <div>
+            <h4>交易程序条件引擎</h4>
+            <p>条件组 <span class="mono">all/any</span>，快照表达式，选股器时刻表与策略单轮询分开。模板补上价格、止盈止损、回合制网格。校验失败的节点在画布上标出原因。</p>
+            <ul class="tight">
+              <li>验收：一条程序「自选池 → 涨跌幅条件 → 买入 → 持仓池 → 回落卖出」在纸面跑通，预授权关闭时只有日志。</li>
+              <li>触及文件：<span class="mono">workflow.hpp</span>、<span class="mono">workflow_engine.cpp</span>、交易程序页。</li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <div class="wave-no">05</div>
+          <div>
+            <h4>分钟线与指标</h4>
+            <p>本地缓存 1/5/15/30/60 分钟和日线。实现 MA、MACD、KDJ、BOLL 的金叉死叉与上下轨。表达式能引用这些名字。模板再开放均线和指标双向。</p>
+            <ul class="tight">
+              <li>验收：用一段已知 K 线，MACD 金叉只触发一次，并写入下游池。</li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <div class="wave-no">06</div>
+          <div>
+            <h4>跨品种投递</h4>
+            <p>股票池增加映射表：监控代码对应一个或多个交易代码。策略单命中 A 时，把 B 写入目标池，由下游策略单交易 B。第一份模板是正股涨幅条件买入对应转债。</p>
+            <ul class="tight">
+              <li>验收：A 触发后委托代码是 B，A 本身不下单。</li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <div class="wave-no">07</div>
+          <div>
+            <h4>打板与轮动</h4>
+            <p>五档数量接入后做卖档扫空和涨停价排单。逐笔源接入后做大单与撤单。轮动单独做：池内排序、持有只数、调仓时刻、先卖后买。</p>
+            <ul class="tight">
+              <li>没有五档量和逐笔之前，这一波不开工，避免用最新价涨幅冒充扫板。</li>
+            </ul>
+          </div>
+        </li>
+      </ol>
+      <h4>波次之外</h4>
+      <p>云端常驻、手机只读、打新、逆回购、社区分享、更多券商通道，各自单独立项。它们不阻塞 01 到 06。跟单模块保持可用，不并进网格改造。</p>
+    </section>
+
+    <section id="sources">
+      <h3>资料来源</h3>
+      <p>2026-10-04 阅读了水母量化帮助中心的公开目录和下列页面，用来核对交易规则。规格中的行为描述是按这些页面归纳后写给本仓库的实现说明。</p>
+      <ul class="tight">
+        <li><a href="https://www.shuimux.com/wiki/index/docs/jat/smssmyjy">本软件的优势</a></li>
+        <li><a href="https://www.shuimux.com/wiki/index/docs/jat/wgjycjy">网格交易介绍</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/wgyxyl">到价驱动运行原理</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/wgqdms">驱动模式</a></li>
+        <li><a href="https://www.shuimux.com/wiki/index/docs/jat/jszjwgsz">极速主机创建页</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/AIzjwgsz">到价主机创建页</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/gjcsszxq">其他高级参数</a></li>
+        <li><a href="https://www.shuimux.com/wiki/index/docs/jat/znpd">智能配对</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/znymd">智能预埋单</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/znymd1">网格中的预埋</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/gywgjydgdjy">拐点交易</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/ccxz">持仓限制</a></li>
+        <li><a href="https://www.shuimux.com/wiki/index/docs/jat/wgjyhcdcjy">网格回测创建页</a></li>
+        <li><a href="https://www.shuimux.com/wiki/index/docs/jat/cljyxt">策略交易</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/kshclsjmb">可视化策略设计面板</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/rhsjygjycx">如何设计一个交易程序</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/xgqszal">选股器案例</a></li>
+        <li><a href="https://www.shuimux.com/wiki/index/docs/jat/yzylb">函数因子</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/zdygs">自定义公式</a></li>
+        <li><a href="https://www.shuimux.com/wiki/index/docs/jat/bpztd">变品种投递</a> · <a href="https://www.shuimux.com/wiki/index/docs/jat/dbzs2">打板助手</a></li>
+      </ul>
+      <p>帮助中心还有模板、视频和更新日志，目录已扫过，没有逐页归档。轮动、可转债因子、打板撤单的细节留到对应波次开工时再读一次原文核对。</p>
+    </section>
+    <footer>跟单台产品规格 · 本地文件 docs/product-spec.html · 不替代投资建议，自动下单仍走预授权和风控。</footer>
+  </main>
+</div>
+<script>
+  const q = document.getElementById("q");
+  const rows = [...document.querySelectorAll("#gap-table tbody tr")];
+  const buttons = [...document.querySelectorAll(".tools button")];
+  let filter = "all";
+  function apply() {
+    const s = q.value.trim().toLowerCase();
+    rows.forEach((row) => {
+      const okF = filter === "all" || row.dataset.s === filter;
+      const okQ = !s || row.innerText.toLowerCase().includes(s);
+      row.hidden = !(okF && okQ);
+    });
+  }
+  q.addEventListener("input", apply);
+  buttons.forEach((b) => b.addEventListener("click", () => {
+    filter = b.dataset.f;
+    buttons.forEach((x) => x.classList.toggle("is-on", x === b));
+    apply();
+  }));
+  const links = [...document.querySelectorAll("nav.rail a")];
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      links.forEach((a) => a.classList.toggle("is-on", a.getAttribute("href") === "#" + en.target.id));
+    });
+  }, { rootMargin: "-20% 0px -70% 0px", threshold: 0.01 });
+  document.querySelectorAll("main section[id]").forEach((s) => obs.observe(s));
+</script>
+</body>
+</html>

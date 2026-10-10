@@ -1,0 +1,5 @@
+#!/bin/sh
+# Drop Cursor co-author lines if a hook or wrapper inserted them.
+tmp="${1}.strip"
+grep -v -e 'cursoragent@cursor.com' -e '^Co-authored-by: Cursor' "$1" > "$tmp" || exit 1
+mv "$tmp" "$1"

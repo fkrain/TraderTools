@@ -1,0 +1,175 @@
+# 常见问题
+
+## 同花顺连接失败
+
+**问题描述**: 无法连接到同花顺客户端
+
+**可能原因与解决方案**:
+
+1. **同花顺客户端未启动**
+   - 确保同花顺交易客户端（`xiadan.exe`）已正常启动并登录
+
+2. **交易程序路径配置错误**
+   - 检查配置项 `[trading] app_path` 是否指向同花顺交易程序的实际路径
+   - 默认路径为 `C:/同花顺远航版/transaction/xiadan.exe`，其他版本可用
+     `--exe_path` 参数指定
+
+3. **客户端重启后服务未恢复**
+   - 同花顺客户端重启后无需重启 EasyTHS，调用
+     `POST /api/v1/system/reconnect` 或 `client.reconnect()` 即可恢复连接
+
+4. **API Key / IP 白名单拦截**
+   - 如配置了 `[api] key`，请求需携带 `Authorization: Bearer <key>`
+   - 如设置了 IP 白名单，请确认当前 IP 在白名单中
+
+5. **权限不足**
+   - 尝试以管理员权限运行 EasyTHS
+
+## 数据获取异常
+
+**问题描述**: 能连接但无法获取正确的数据
+
+**解决方案**:
+
+- 确认同花顺客户端已登录账号
+- 检查网络连接是否正常
+- 尝试重启同花顺客户端和 EasyTHS 服务
+
+## 权限错误
+
+**问题描述**: 提示权限不足或无法访问
+
+**解决方案**:
+
+- 以管理员身份运行程序
+- 检查防火墙设置，确保端口未被阻止
+
+## onnxruntime DLL 加载失败
+
+**问题描述**: 启动时报错 `ImportError: DLL load failed while importing onnxruntime_pybind11_state: 找不到指定的模块。`
+
+**完整错误示例**:
+
+```
+File "...\onnxruntime\__init__.py", line 74, in <module>
+    raise import_capi_exception
+...
+ImportError: DLL load failed while importing onnxruntime_pybind11_state: 找不到指定的模块。
+```
+
+**原因分析**:
+
+onnxruntime 依赖 Microsoft Visual C++ 运行时库，新安装的 Windows 系统可能缺少此依赖。
+
+**解决方案**:
+
+1. **下载并安装 Microsoft Visual C++ Redistributable**（推荐）
+   - 访问微软官方下载页面：https://aka.ms/vs/17/release/vc_redist.x64.exe
+   - 安装 **Microsoft Visual C++ 2015-2022 Redistributable (x64)**
+   - 安装完成后重启系统或重新运行 EasyTHS
+
+2. **检查 CPU 兼容性**（如方案1无效）
+   - 默认的 onnxruntime 需要 AVX2 指令集支持
+   - 部分 CPU 不支持，可尝试降级版本：
+     ```bash
+     pip uninstall onnxruntime
+     pip install onnxruntime==1.16.0
+     ```
+
+3. **确认架构匹配**
+   - 确保 Python、onnxruntime 和 Windows 均为 **x64** 架构
+   - 检查命令：`python -c "import platform; print(platform.architecture())"`
+
+---
+
+## 未能解决问题？
+
+如果您遇到上述方法无法解决的问题，请通过以下方式向我们反馈：
+
+### 提交 Issue
+
+请在 [GitHub Issues](https://github.com/noimank/easyths/issues) 提交问题，为了帮助我们快速定位和解决问题，请提供以下信息：
+
+#### 必需信息
+
+1. **环境信息**
+   - 操作系统版本（如 Windows 10/11）
+   - Python 版本（`python --version`）
+   - EasyTHS 版本（`pip show easyths`）
+   - 同花顺客户端版本
+
+2. **问题描述**
+   - 清晰描述遇到的问题
+   - 您期望的行为是什么
+   - 实际发生了什么
+
+3. **复现步骤**
+   - 提供详细的可复现操作步骤
+   - 示例：
+     ```markdown
+     1. 启动 EasyTHS 服务
+     2. 调用 funds_query 接口（POST /api/v1/operations/funds_query）
+     3. 观察到返回错误信息
+     ```
+
+4. **错误信息**
+   - 完整的错误堆栈信息
+   - 或服务端日志中的错误记录
+
+#### 推荐信息（如适用）
+
+5. **截图**
+   - 错误界面截图
+   - 同花顺客户端状态截图
+   - 配置界面截图（打码敏感信息）
+
+6. **服务运行日志**
+   - EasyTHS 服务的控制台输出或日志文件
+   - 日志级别建议设置为 `DEBUG` 以获取更多信息
+
+7. **最小复现代码**
+   - 如果是 API 调用问题，提供可以复现问题的最小代码示例
+
+#### Issue 模板
+
+```markdown
+### 问题描述
+[简要描述问题]
+
+### 环境信息
+- 操作系统: [如 Windows 11]
+- Python 版本: [如 3.11]
+- EasyTHS 版本: [如 0.1.0]
+- 同花顺版本: [如 11.6]
+
+### 复现步骤
+1. [第一步]
+2. [第二步]
+3. ...
+
+### 期望行为
+[描述您期望发生什么]
+
+### 实际行为
+[描述实际发生了什么]
+
+### 错误信息
+```
+[粘贴完整的错误日志]
+```
+
+### 截图
+[如有相关截图，请在此上传]
+
+### 其他信息
+[任何其他有助于解决问题的信息]
+```
+
+---
+
+### 其他反馈渠道
+
+- **讨论区**: [GitHub Discussions](https://github.com/noimank/easyths/discussions) - 适合提问和交流
+- **邮件**: noimank@163.com
+
+我们会尽快回复并解决问题！

@@ -1,0 +1,75 @@
+Global:
+  use_gpu: true
+  # Character set (auto-sorted at runtime for consistent index mapping)
+  character: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+  img_h: 64
+  img_w: 256
+  seed: 42
+  output_dir: "outputs"
+  resume: true
+
+Architecture:
+  backbone:
+    nc: 1  # 1=grayscale, 3=RGB
+  head:
+    hidden_dim: 128
+
+Optimizer:
+  lr: 0.0001
+  weight_decay: 0.00001
+
+Scheduler:
+  # Scheduler types:
+  #   - onecycle: OneCycleLR, good for training from scratch
+  #   - constant: Fixed LR, best for fine-tuning stable phase
+  #   - cosine: CosineAnnealingWarmRestarts, smooth decay with restarts
+  #   - reduce_on_plateau: Dynamic based on val metrics, recommended for fine-tuning
+  #   - linear: LinearLR, linear decay
+  type: onecycle
+  epochs: 150
+
+  # OneCycleLR params (used when type=onecycle)
+  max_lr: 0.003
+  div_factor: 25        # initial_lr = max_lr / div_factor = 1.2e-4
+  final_div_factor: 1000 # final_lr = max_lr / (div_factor * final_div_factor) = 1.2e-7
+  pct_start: 0.3         # 30% warmup, 70% decay
+
+  # CosineAnnealingWarmRestarts params (used when type=cosine)
+  T_0: 10               # initial restart period (epochs)
+  T_mult: 2             # period multiplier after each restart
+  eta_min: 0.000001     # minimum LR
+
+  # ReduceLROnPlateau params (used when type=reduce_on_plateau)
+  factor: 0.5           # LR = LR * factor when plateau
+  patience: 5           # epochs to wait before reducing LR
+  min_lr: 0.0000001     # minimum LR
+
+Training:
+  batch_size: 64
+  num_workers: 4
+  save_interval: 20
+  early_stopping:
+    patience: 20
+    min_delta: 0.001
+
+DataAugmentation:
+  enabled: true
+  brightness_prob: 0.5
+  brightness_range: [0.8, 1.2]
+  contrast_prob: 0.5
+  contrast_range: [0.8, 1.2]
+  rotation_prob: 0.3
+  rotation_range: [-5, 5]
+  noise_prob: 0.3
+  noise_std: 0.02
+  blur_prob: 0.2
+  blur_kernel_range: [3, 5]
+  cutout_prob: 0.1
+  cutout_size: 10
+
+Dataset:
+  train_dir: data/train
+  val_dir: data/val
+
+Eval:
+  test_dir: data/test

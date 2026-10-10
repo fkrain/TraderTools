@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>跟单台</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">跟单台</div>
+    <div class="top-meta">
+      <span id="session-badge">—</span>
+      <span id="quote-status">行情 · —</span>
+      <span id="em-status">东财 · —</span>
+      <span id="xq-status">雪球 · —</span>
+      <span id="broker-status" class="is-off">交易 · —</span>
+      <span id="risk-status">风控 · —</span>
+      <span id="confirm-status" hidden>待确认 · 0</span>
+    </div>
+    <button class="btn ghost" id="settings-btn" type="button">设置</button>
+  </header>
+
+  <div id="confirm-bar" class="confirm-bar" hidden>
+    <div class="confirm-bar-title">半自动确认</div>
+    <div id="confirm-list" class="confirm-list"></div>
+  </div>
+
+  <div class="shell">
+    <nav class="sidenav" aria-label="主导航">
+      <div class="nav-group">交易</div>
+      <button type="button" class="nav-item is-active" data-page="follow">跟单</button>
+      <button type="button" class="nav-item" data-page="picker">选组合</button>
+      <button type="button" class="nav-item" data-page="account">账户</button>
+
+      <div class="nav-group">风控</div>
+      <button type="button" class="nav-item" data-page="stoploss">止损止盈</button>
+      <button type="button" class="nav-item" data-page="condition">条件单</button>
+      <button type="button" class="nav-item" data-page="t0">T+0</button>
+      <button type="button" class="nav-item" data-page="grid">区间交易</button>
+
+      <div class="nav-group">信号</div>
+      <button type="button" class="nav-item" data-page="workflow">交易程序</button>
+      <button type="button" class="nav-item" data-page="alert">预警交易</button>
+      <button type="button" class="nav-item" data-page="pool">股票池</button>
+      <button type="button" class="nav-item" data-page="formula">公式下单</button>
+
+      <div class="nav-group">下单</div>
+      <button type="button" class="nav-item" data-page="flash">闪电下单</button>
+      <button type="button" class="nav-item" data-page="basket">篮子下单</button>
+      <button type="button" class="nav-item" data-page="board">打板</button>
+
+      <div class="nav-group">系统</div>
+      <button type="button" class="nav-item" data-page="accounts">多账户</button>
+      <button type="button" class="nav-item" data-page="curve">资金曲线</button>
+      <button type="button" class="nav-item" data-page="logs">日志</button>
+    </nav>
+
+    <main class="content">
+      <!-- 跟单首页 -->
+      <section class="page is-active" id="page-follow" aria-label="跟单">
+        <div class="page-head">
+          <h1>我的跟单</h1>
+          <button class="btn primary" id="goto-picker-btn" type="button">添加跟单</button>
+        </div>
+        <div id="follow-empty" class="empty-state">
+          <p>还没有跟单</p>
+          <button class="btn primary" id="follow-empty-add" type="button">添加跟单</button>
+        </div>
+        <div id="follow-table-wrap" class="table-wrap is-hidden">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>来源</th>
+                <th>组合</th>
+                <th class="num">对方今日</th>
+                <th class="num">我的今日</th>
+                <th class="num">仓位偏差</th>
+                <th>上次同步</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="follow-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 对照页 -->
+      <section class="page" id="page-compare" aria-label="对照">
+        <div class="page-head">
+          <div>
+            <button class="btn ghost" id="compare-back" type="button">返回</button>
+            <h1 id="compare-title">对照</h1>
+            <p class="sub" id="compare-sub"></p>
+          </div>
+          <button class="btn primary" id="compare-sync" type="button">同步</button>
+        </div>
+        <dl class="metrics" id="compare-metrics"></dl>
+        <p class="warn" id="compare-warn" hidden></p>
+        <div class="compare-grid">
+          <div>
+            <h2>对方</h2>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>代码</th>
+                    <th>名称</th>
+                    <th class="num">权重</th>
+                    <th class="num">标记</th>
+                  </tr>
+                </thead>
+                <tbody id="compare-target-rows"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h2>我的</h2>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>股数</th>
+                    <th class="num">权重</th>
+                    <th class="num">差额</th>
+                    <th class="num">标记</th>
+                  </tr>
+                </thead>
+                <tbody id="compare-mine-rows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <h2>最近调仓</h2>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>方向</th>
+                <th>名称</th>
+                <th class="num">权重变化</th>
+                <th class="num">价格</th>
+              </tr>
+            </thead>
+            <tbody id="compare-rebalance-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 选组合 -->
+      <section class="page" id="page-picker" aria-label="选组合">
+        <div class="page-head">
+          <h1>选组合</h1>
+          <form class="lookup" id="lookup-form">
+            <input id="lookup-input" name="q" placeholder="东财资金账号或雪球 ZH 代码" autocomplete="off" />
+            <button class="btn primary" type="submit">打开</button>
+          </form>
+        </div>
+        <div class="picker-toolbar">
+          <div class="tabs" id="source-tabs" role="tablist">
+            <button type="button" class="is-active" data-source="eastmoney">东财</button>
+            <button type="button" data-source="xueqiu">雪球</button>
+          </div>
+          <div class="tabs" id="rank-tabs">
+            <button type="button" data-rank="daily" class="is-active">日</button>
+            <button type="button" data-rank="5d">5日</button>
+            <button type="button" data-rank="20d">20日</button>
+            <button type="button" data-rank="250d">250日</button>
+            <button type="button" data-rank="total">总</button>
+          </div>
+        </div>
+        <p class="note" id="picker-note"></p>
+        <div class="picker-layout">
+          <div class="table-wrap grow">
+            <table class="data-table clickable">
+              <thead>
+                <tr>
+                  <th>名称</th>
+                  <th>管理人</th>
+                  <th class="num">收益</th>
+                  <th>最近操作</th>
+                </tr>
+              </thead>
+              <tbody id="picker-rows"></tbody>
+            </table>
+          </div>
+          <aside class="preview" id="picker-preview" aria-label="组合预览">
+            <div id="preview-empty" class="empty-state compact">
+              <p>点左侧一行查看持仓</p>
+            </div>
+            <div id="preview-body" class="is-hidden">
+              <h2 id="preview-name"></h2>
+              <p class="sub" id="preview-meta"></p>
+              <dl class="metrics slim" id="preview-metrics"></dl>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>代码</th>
+                      <th>名称</th>
+                      <th class="num">权重</th>
+                    </tr>
+                  </thead>
+                  <tbody id="preview-holdings"></tbody>
+                </table>
+              </div>
+              <button class="btn primary block" id="preview-follow-btn" type="button">加入跟单</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- 账户 -->
+      <section class="page" id="page-account" aria-label="账户">
+        <div class="page-head">
+          <div>
+            <h1>账户</h1>
+            <p class="sub" id="account-target">还没有跟单</p>
+          </div>
+        </div>
+        <div id="account-empty" class="empty-state">
+          <p>还没有跟单</p>
+          <button class="btn primary" id="account-empty-add" type="button">添加跟单</button>
+        </div>
+        <div id="account-body" class="is-hidden">
+          <dl class="metrics" id="account-metrics"></dl>
+          <h2>持仓</h2>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>代码</th>
+                  <th>名称</th>
+                  <th class="num">股数</th>
+                  <th class="num">成本</th>
+                  <th class="num">现价</th>
+                  <th class="num">盈亏</th>
+                  <th class="num">权重</th>
+                </tr>
+              </thead>
+              <tbody id="account-rows"></tbody>
+            </table>
+          </div>
+          <h2>成交</h2>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>方向</th>
+                  <th>名称</th>
+                  <th class="num">数量</th>
+                  <th class="num">价格</th>
+                  <th class="num">金额</th>
+                </tr>
+              </thead>
+              <tbody id="trade-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 止损止盈 -->
+      <section class="page" id="page-stoploss" aria-label="止损止盈">
+        <div class="page-head">
+          <div>
+            <h1>止损止盈</h1>
+            <p class="sub">固定价/百分比止损止盈，支持移动止盈（从最高价回落触发）</p>
+          </div>
+          <button class="btn primary" type="button" id="sl-add-btn">添加规则</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>代码</th><th>名称</th><th class="num">数量</th><th class="num">成本</th>
+                <th class="num down">止损</th><th class="num up">止盈</th><th>移动</th><th>状态</th><th>最近触发</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="sl-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-condition" aria-label="条件单">
+        <div class="page-head">
+          <div>
+            <h1>条件单</h1>
+            <p class="sub">价格 / 时间 / 当日涨跌幅条件，触发后一次性委托</p>
+          </div>
+          <button class="btn primary" type="button" id="cond-add-btn">新建条件单</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>代码</th><th>方向</th><th>类型</th><th>条件</th>
+                <th class="num">数量</th><th>状态</th><th>触发时间</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="cond-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-t0" aria-label="T+0">
+        <div class="page-head">
+          <div>
+            <h1>T+0</h1>
+            <p class="sub">日内回转：相对日锚跌买涨卖；支持买卖数量、每日轮次、冷却与交易时段</p>
+          </div>
+          <button class="btn primary" type="button" id="t0-add-btn">添加 T+0</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>代码</th><th>名称</th><th class="num down">买跌%</th><th class="num up">卖涨%</th>
+                <th class="num">买/卖</th><th class="num">日锚</th><th class="num">轮次</th>
+                <th>持仓中</th><th>状态</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="t0-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-grid" aria-label="区间交易">
+        <div class="page-head">
+          <div>
+            <h1>区间交易 <span class="badge" id="grid-engine-badge">C++ 引擎</span></h1>
+            <p class="sub">网格高抛低吸：相对上次成交价涨跌触发，可选拐点。C++ 引擎按设置行情源轮询；非模拟通道写入 orders/outbox。</p>
+          </div>
+          <div class="row-actions">
+            <button class="btn" id="grid-engine-start" type="button">启动引擎</button>
+            <button class="btn" id="grid-engine-dry" type="button">试跑</button>
+            <button class="btn" id="grid-engine-stop" type="button">停止</button>
+            <button class="btn primary" id="grid-add-btn" type="button">加入区间</button>
+          </div>
+        </div>
+        <dl class="metrics" id="grid-metrics">
+          <div><dt>策略数</dt><dd id="grid-m-count">0</dd></div>
+          <div><dt>监控中</dt><dd id="grid-m-running">0</dd></div>
+          <div><dt>区间盈利</dt><dd id="grid-m-pnl" class="up">0</dd></div>
+          <div><dt>区间节省</dt><dd id="grid-m-save">0</dd></div>
+          <div><dt>引擎</dt><dd id="grid-m-engine">未启动</dd></div>
+        </dl>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>代码</th>
+                <th>名称</th>
+                <th class="num">上次成交价</th>
+                <th class="num up">涨卖%</th>
+                <th class="num down">跌买%</th>
+                <th class="num">每次买</th>
+                <th class="num">区间</th>
+                <th class="num">盈利</th>
+                <th class="num">节省</th>
+                <th>选项</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="grid-rows"></tbody>
+          </table>
+        </div>
+        <pre class="log-box" id="grid-engine-log" style="margin-top:10px;max-height:160px;overflow:auto;font-size:12px"></pre>
+      </section>
+
+      <!-- 预警交易 -->
+      <section class="page" id="page-alert" aria-label="预警交易">
+        <div class="page-head">
+          <div>
+            <h1>预警交易</h1>
+            <p class="sub">价格/涨跌幅预警，或监听通达信类 sign 文件（参考 tdxtrader）；可仅提醒或自动下单</p>
+          </div>
+          <button class="btn primary" type="button" id="alert-add-btn">添加预警</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>来源</th><th>名称</th><th>代码/信号</th><th>方向</th>
+                <th class="num">条件</th><th class="num">数量</th><th>自动下单</th>
+                <th>状态</th><th>最近触发</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="alert-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-workflow" aria-label="交易程序">
+        <div class="page-head">
+          <div>
+            <h1>交易程序</h1>
+            <p class="sub">拖拽选股器 / 股票池 / 策略单并连线，链式流转（水母式本地 MVP）</p>
+          </div>
+          <div class="row-actions">
+            <button class="btn" type="button" id="wf-template-btn">示例：文件信号</button>
+            <button class="btn primary" type="button" id="wf-new-btn">新建程序</button>
+          </div>
+        </div>
+        <div class="table-wrap" id="wf-list-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>名称</th><th>节点</th><th>启用</th><th>预授权</th><th>更新</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="wf-rows"></tbody>
+          </table>
+        </div>
+        <div id="wf-editor" class="wf-editor is-hidden">
+          <div class="wf-toolbar">
+            <input id="wf-name" placeholder="程序名称" />
+            <label class="check"><input type="checkbox" id="wf-enabled" /> 启用</label>
+            <label class="check"><input type="checkbox" id="wf-preauth" /> 预授权下单</label>
+            <button class="btn" type="button" id="wf-validate-btn">校验</button>
+            <button class="btn primary" type="button" id="wf-save-btn">保存</button>
+            <button class="btn ghost" type="button" id="wf-back-btn">返回列表</button>
+          </div>
+          <div class="wf-body">
+            <aside class="wf-palette">
+              <div class="wf-palette-title">组件</div>
+              <button type="button" class="wf-palette-item" data-type="selector">选股器</button>
+              <button type="button" class="wf-palette-item" data-type="pool">股票池</button>
+              <button type="button" class="wf-palette-item" data-type="strategy">策略单</button>
+              <p class="muted wf-hint">点击添加；拖节点移动；从输出点拖到输入点连线；双击连线删除</p>
+            </aside>
+            <div class="wf-canvas-wrap">
+              <svg id="wf-edges" class="wf-edges"></svg>
+              <div id="wf-canvas" class="wf-canvas"></div>
+            </div>
+            <aside class="wf-props">
+              <div class="wf-palette-title">参数</div>
+              <div id="wf-props-empty" class="muted">选中节点以编辑</div>
+              <div id="wf-props-form" class="is-hidden"></div>
+              <div class="wf-palette-title" style="margin-top:14px">运行态</div>
+              <div id="wf-runtime" class="wf-runtime muted">保存并启用后显示池内标的</div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-pool" aria-label="股票池">
+        <div class="page-head">
+          <div>
+            <h1>自选 / 股票池</h1>
+            <p class="sub">自选池行情跟踪；可设高/低价带一次性提醒</p>
+          </div>
+          <button class="btn primary" type="button" id="watch-add-btn">添加自选</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>代码</th><th>名称</th><th>标签</th>
+                <th class="num">高价提醒</th><th class="num">低价提醒</th><th>备注</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="watch-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-formula" aria-label="公式下单">
+        <div class="page-head">
+          <div>
+            <h1>公式下单</h1>
+            <p class="sub">监听通达信预警文件中的公式/信号名，触发后自动买卖（同 tdxtrader）</p>
+          </div>
+          <button class="btn primary" type="button" id="formula-add-btn">关联公式</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>公式/信号名</th><th>方向</th><th class="num">数量</th><th>状态</th>
+                <th class="num">触发次数</th><th>最近</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="formula-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-flash" aria-label="闪电下单">
+        <div class="page-head">
+          <div>
+            <h1>闪电下单</h1>
+            <p class="sub">快速限价委托；受风控（交易日/时段/日限额）约束</p>
+          </div>
+        </div>
+        <div class="form-grid slim" style="max-width:720px">
+          <label>代码
+            <div class="code-with-name">
+              <input id="flash-code" class="js-stock-code" data-name-target="flash-name" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="600616" autocomplete="off" />
+              <span class="code-name-hint"></span>
+            </div>
+          </label>
+          <label>名称 <input id="flash-name" placeholder="自动识别" /></label>
+          <label>方向
+            <select id="flash-side"><option value="buy">买入</option><option value="sell">卖出</option></select>
+          </label>
+          <label>数量 <input id="flash-qty" type="number" value="100" step="100" /></label>
+          <label>报价方式 <select id="flash-px" class="js-px-type" data-px-default="ask1"></select></label>
+          <label>限价(0=按报价) <input id="flash-price" type="number" step="0.01" value="0" /></label>
+        </div>
+        <div class="dialog-actions" style="justify-content:flex-start;margin-top:12px">
+          <button class="btn primary" type="button" id="flash-submit">下单</button>
+        </div>
+        <p class="sub" id="flash-hint"></p>
+      </section>
+
+      <section class="page" id="page-basket" aria-label="篮子下单">
+        <div class="page-head">
+          <div>
+            <h1>篮子下单</h1>
+            <p class="sub">多标的一键按数量或权重执行</p>
+          </div>
+          <button class="btn primary" type="button" id="basket-add-btn">新建篮子</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>名称</th><th class="num">资金</th><th class="num">成分数</th><th>备注</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="basket-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-board" aria-label="打板">
+        <div class="page-head">
+          <div>
+            <h1>打板</h1>
+            <p class="sub">相对当日首次价涨幅达到阈值时买入（近似涨停打板）</p>
+          </div>
+          <button class="btn primary" type="button" id="board-add-btn">添加标的</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>代码</th><th>名称</th><th class="num up">涨幅阈值%</th><th class="num">数量</th>
+                <th>状态</th><th>最近</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="board-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-accounts" aria-label="多账户">
+        <div class="page-head">
+          <div>
+            <h1>多账户</h1>
+            <p class="sub">纸面/通道账户登记与资金；默认自动创建纸面账户</p>
+          </div>
+          <button class="btn primary" type="button" id="acct-add-btn">关联账户</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>名称</th><th>通道</th><th class="num">本金</th><th class="num">现金</th>
+                <th class="num">权益</th><th>启用</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="acct-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-curve" aria-label="资金曲线">
+        <div class="page-head">
+          <div>
+            <h1>资金曲线</h1>
+            <p class="sub">按交易日快照账户权益（自动写入）</p>
+          </div>
+          <button class="btn ghost" type="button" id="curve-refresh">刷新</button>
+        </div>
+        <div id="curve-summary" class="sub"></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>日期</th><th class="num">权益</th><th class="num">现金</th></tr>
+            </thead>
+            <tbody id="curve-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-logs" aria-label="日志">
+        <div class="page-head">
+          <div>
+            <h1>日志 / 订单</h1>
+            <p class="sub">引擎事件与委托文件扫描</p>
+          </div>
+          <button class="btn ghost" type="button" id="logs-refresh">刷新</button>
+        </div>
+        <div class="tabs page-tabs" id="logs-tabs">
+          <button type="button" class="is-active" data-logtab="events">事件</button>
+          <button type="button" data-logtab="orders">订单</button>
+          <button type="button" data-logtab="engine">引擎</button>
+        </div>
+        <div id="logs-empty" class="empty-state is-hidden"><p>还没有日志</p></div>
+        <div id="logs-table-wrap" class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>时间</th><th>类型</th><th>说明</th>
+              </tr>
+            </thead>
+            <tbody id="log-rows"></tbody>
+          </table>
+        </div>
+      </section>
+        </main>
+  </div>
+
+  <dialog id="grid-dialog">
+    <form method="dialog" id="grid-form" class="grid-setup">
+      <header class="gs-head">
+        <div>
+          <h3 id="grid-dialog-title">加入区间交易</h3>
+          <p class="sub gs-lead">按类别填写：标的 → 区间 → 触发 → 买入 / 卖出 → 仓位与时段 → 执行。</p>
+        </div>
+        <div class="gs-presets" role="group" aria-label="触发幅度快捷">
+          <button type="button" class="gs-chip" data-preset="safe">稳健 1%</button>
+          <button type="button" class="gs-chip is-active" data-preset="std">标准 2%</button>
+          <button type="button" class="gs-chip" data-preset="agg">积极 3%</button>
+        </div>
+      </header>
+      <div class="gs-tpl-bar">
+        <label class="gs-field gs-tpl-select">模板
+          <select id="g-tpl-select"><option value="">选择模板…</option></select>
+        </label>
+        <button type="button" class="btn ghost" id="g-tpl-apply">应用</button>
+        <button type="button" class="btn ghost" id="g-tpl-save">保存模板</button>
+        <button type="button" class="btn ghost" id="g-tpl-del">删除</button>
+        <label class="check"><input type="checkbox" id="g-tpl-default" /> 设为默认（新建时自动填入）</label>
+      </div>
+      <input type="hidden" id="grid-id" />
+      <input type="checkbox" id="g-by-price" class="is-hidden" />
+
+      <div class="gs-body">
+        <aside class="gs-rail" aria-label="区间示意">
+          <div class="gs-rail-caption">实时示意</div>
+          <div class="gs-ladder">
+            <div class="gs-rung gs-ceil"><span class="gs-tag">区间上限</span><strong id="gs-v-ceil">不限</strong></div>
+            <div class="gs-rung gs-sell"><span class="gs-tag sell">卖出触发</span><strong id="gs-v-sell">+2%</strong><em id="gs-v-sell-px">相对基准</em></div>
+            <div class="gs-rung gs-base"><span class="gs-tag">基准价</span><strong id="gs-v-base">待定</strong></div>
+            <div class="gs-rung gs-buy"><span class="gs-tag buy">买入触发</span><strong id="gs-v-buy">-2%</strong><em id="gs-v-buy-px">相对基准</em></div>
+            <div class="gs-rung gs-floor"><span class="gs-tag">区间下限</span><strong id="gs-v-floor">不限</strong></div>
+          </div>
+          <p class="gs-story" id="gs-story">跌 2% 买 100 股 · 涨 2% 卖上次量</p>
+        </aside>
+
+        <div class="gs-main">
+          <!-- 1 标的 -->
+          <section class="gs-card" data-cat="symbol">
+            <div class="gs-card-h"><span class="gs-cat">标的</span>股票信息</div>
+            <div class="gs-inline three">
+              <label class="gs-field">代码
+                <div class="code-with-name">
+                  <input id="g-code" class="js-stock-code" data-name-target="g-name" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="600616" required autocomplete="off" />
+                  <span class="code-name-hint"></span>
+                </div>
+              </label>
+              <label class="gs-field">名称<input id="g-name" placeholder="自动识别" /></label>
+              <label class="gs-field">备注<input id="g-note" placeholder="可选" /></label>
+            </div>
+          </section>
+
+          <!-- 2 区间边界：只放上下限 -->
+          <section class="gs-card" data-cat="range">
+            <div class="gs-card-h"><span class="gs-cat">区间</span>价格边界</div>
+            <p class="gs-sec-desc">突破边界时按动作处理；清仓会保留「底仓股数」。0 表示该侧不限制。</p>
+            <div class="gs-inline">
+              <label class="gs-field">区间上限（元）<input id="g-ceil" type="number" step="0.01" value="0" /></label>
+              <label class="gs-field">上限动作
+                <select id="g-ceil-action">
+                  <option value="pause">暂停</option>
+                  <option value="clear_pause">清仓并暂停</option>
+                  <option value="clear_stop">清仓并停机</option>
+                </select>
+              </label>
+            </div>
+            <div class="gs-inline">
+              <label class="gs-field">区间下限（元）<input id="g-floor" type="number" step="0.01" value="0" /></label>
+              <label class="gs-field">下限动作
+                <select id="g-floor-action">
+                  <option value="pause">暂停</option>
+                  <option value="clear_pause">清仓并暂停</option>
+                  <option value="clear_stop" selected>清仓并停机</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <!-- 3 触发：只放基准与涨跌条件 -->
+          <section class="gs-card" data-cat="trigger">
+            <div class="gs-card-h"><span class="gs-cat">触发</span>相对基准的买卖条件</div>
+            <p class="gs-sec-desc">以「上次成交价」为基准，达到涨跌条件后触发对应方向。</p>
+            <div class="gs-mode" id="gs-mode">
+              <label class="gs-mode-opt"><input type="radio" name="gs-mode" value="pct" checked /><span>按涨跌幅 %</span></label>
+              <label class="gs-mode-opt"><input type="radio" name="gs-mode" value="price" /><span>按绝对价差（元）</span></label>
+            </div>
+            <div class="gs-inline">
+              <label class="gs-field">基准价（上次成交）<input id="g-last-price" type="number" step="0.01" value="0" /></label>
+              <label class="gs-field">上次成交量（股）<input id="g-last-qty" type="number" step="1" value="0" /></label>
+            </div>
+            <div class="gs-trigger-row">
+              <div class="gs-trigger buy">
+                <div class="gs-trigger-title">买入触发</div>
+                <label class="gs-field">下跌达到
+                  <div class="gs-num">
+                    <input id="g-buy-down" type="number" step="0.1" value="2" />
+                    <span class="gs-unit" id="gs-unit-buy">%</span>
+                  </div>
+                </label>
+              </div>
+              <div class="gs-trigger sell">
+                <div class="gs-trigger-title">卖出触发</div>
+                <label class="gs-field">上涨达到
+                  <div class="gs-num">
+                    <input id="g-sell-up" type="number" step="0.1" value="2" />
+                    <span class="gs-unit" id="gs-unit-sell">%</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+            <div class="gs-toggles compact">
+              <label class="check"><input type="checkbox" id="g-cost" /> 用成本价作基准</label>
+            </div>
+          </section>
+
+          <!-- 4 买入：所有买入相关 -->
+          <section class="gs-card" data-cat="buy">
+            <div class="gs-card-h"><span class="gs-cat buy">买入</span>数量 · 报价 · 加仓</div>
+            <div class="gs-inline three">
+              <label class="gs-field">每次买入
+                <div class="gs-num">
+                  <input id="g-buy-qty" type="number" step="1" value="100" />
+                  <select id="g-buy-unit" class="gs-unit-sel"><option value="shares">股</option><option value="amount">元</option></select>
+                </div>
+              </label>
+              <label class="gs-field">买入报价
+                <select id="g-buy-px" class="js-px-type" data-px-default="ask1"></select>
+              </label>
+              <label class="gs-field">倒金字塔倍数 <span class="gs-muted">0=关</span>
+                <input id="g-buy-mult" type="number" step="0.1" value="0" />
+              </label>
+            </div>
+            <div class="gs-inline three">
+              <label class="gs-field">最多连买 <span class="gs-muted">0=不限</span>
+                <input id="g-max-streak" type="number" step="1" value="0" />
+              </label>
+              <label class="gs-field">最低拐点<input id="g-low-pivot" type="number" step="0.01" value="0" /></label>
+              <label class="gs-field">反弹幅度%<input id="g-rebound" type="number" step="0.1" value="0" /></label>
+            </div>
+            <div class="gs-toggles">
+              <label class="check"><input type="checkbox" id="g-preorder-buy" /> 买入提前挂单</label>
+              <label class="check"><input type="checkbox" id="g-cross-buy" /> 跨区间倍买</label>
+              <label class="check"><input type="checkbox" id="g-margin" /> 融资买入</label>
+              <label class="check"><input type="checkbox" id="g-check-buy-down" /> 反弹后仍校验下跌</label>
+            </div>
+          </section>
+
+          <!-- 5 卖出：所有卖出相关 -->
+          <section class="gs-card" data-cat="sell">
+            <div class="gs-card-h"><span class="gs-cat sell">卖出</span>数量 · 报价 · 减仓</div>
+            <div class="gs-inline three">
+              <label class="gs-field">每次卖出 <span class="gs-muted">0=上次量</span>
+                <div class="gs-num">
+                  <input id="g-sell-qty" type="number" step="1" value="0" />
+                  <select id="g-sell-unit" class="gs-unit-sel"><option value="shares">股</option><option value="amount">元</option></select>
+                </div>
+              </label>
+              <label class="gs-field">卖出报价
+                <select id="g-sell-px" class="js-px-type" data-px-default="bid1"></select>
+              </label>
+              <label class="gs-field">最高拐点<input id="g-high-pivot" type="number" step="0.01" value="0" /></label>
+            </div>
+            <div class="gs-inline">
+              <label class="gs-field">回落幅度%<input id="g-pullback" type="number" step="0.1" value="0" /></label>
+              <span></span>
+            </div>
+            <div class="gs-toggles">
+              <label class="check"><input type="checkbox" id="g-preorder-sell" /> 卖出提前挂单</label>
+              <label class="check"><input type="checkbox" id="g-cross-sell" /> 跨区间倍卖</label>
+              <label class="check"><input type="checkbox" id="g-sell-all" /> 多次买入后一次卖</label>
+              <label class="check"><input type="checkbox" id="g-check-sell-up" /> 回落后仍校验上涨</label>
+            </div>
+          </section>
+
+          <!-- 6 仓位 -->
+          <section class="gs-card" data-cat="position">
+            <div class="gs-card-h"><span class="gs-cat">仓位</span>持仓约束</div>
+            <div class="gs-inline">
+              <label class="gs-field">最大持仓金额 <span class="gs-muted">0=不限</span>
+                <input id="g-max-pos" type="number" step="100" value="0" />
+              </label>
+              <label class="gs-field">保留底仓（股）
+                <input id="g-reserve" type="number" step="100" value="0" />
+              </label>
+            </div>
+            <div class="gs-inline three">
+              <label class="gs-field">股数上限 <span class="gs-muted">0=不限</span>
+                <input id="g-cap-shares" type="number" step="100" value="0" />
+              </label>
+              <label class="gs-field">止损价
+                <input id="g-stop-price" type="number" step="0.01" value="0" />
+              </label>
+              <label class="gs-field">最多连卖 <span class="gs-muted">0=不限</span>
+                <input id="g-max-sell-streak" type="number" step="1" value="0" />
+              </label>
+            </div>
+            <div class="gs-toggles">
+              <label class="check"><input type="checkbox" id="g-pause-buy" /> 暂停低吸</label>
+              <label class="check"><input type="checkbox" id="g-pause-sell" /> 暂停高抛</label>
+              <label class="check"><input type="checkbox" id="g-stop-flat" /> 卖光且在基准上方则停止</label>
+              <label class="check"><input type="checkbox" id="g-gap" /> 跳空按格数成交</label>
+            </div>
+          </section>
+
+          <!-- 7 时段 -->
+          <section class="gs-card" data-cat="session">
+            <div class="gs-card-h"><span class="gs-cat">时段</span>有效交易时间</div>
+            <div class="gs-inline three">
+              <label class="gs-field">开始<input id="g-session-start" type="time" step="1" value="09:25:00" /></label>
+              <label class="gs-field">结束<input id="g-session-end" type="time" step="1" value="15:00:00" /></label>
+              <label class="gs-field gs-check-field">启用
+                <span class="gs-check-wrap"><label class="check"><input type="checkbox" id="g-session" checked /> 仅此时段交易</label></span>
+              </label>
+            </div>
+          </section>
+
+          <!-- 8 执行 -->
+          <section class="gs-card" data-cat="exec">
+            <div class="gs-card-h"><span class="gs-cat">执行</span>下单与确认</div>
+            <div class="gs-inline">
+              <label class="gs-field">下单优化（分）
+                <input id="g-offset" type="number" step="1" value="0" />
+              </label>
+              <label class="gs-field">延迟确认（秒）
+                <input id="g-delay" type="number" step="1" value="0" />
+              </label>
+            </div>
+            <div class="gs-inline three">
+              <label class="gs-field">驱动
+                <select id="g-drive">
+                  <option value="touch">到价驱动</option>
+                  <option value="fill">成交驱动</option>
+                </select>
+              </label>
+              <label class="gs-field">配对
+                <select id="g-pair">
+                  <option value="loose">宽松</option>
+                  <option value="strict">严格</option>
+                  <option value="none">不配对</option>
+                </select>
+              </label>
+              <label class="gs-field">未配对上限 <span class="gs-muted">严格模式</span>
+                <input id="g-unpaired" type="number" step="1" value="0" />
+              </label>
+            </div>
+            <div class="gs-inline three">
+              <label class="gs-field">止盈方式
+                <select id="g-tp-mode">
+                  <option value="none">关闭</option>
+                  <option value="pnl_pct">收益率%</option>
+                  <option value="price">价格</option>
+                </select>
+              </label>
+              <label class="gs-field">止盈阈值
+                <input id="g-tp-value" type="number" step="0.01" value="0" />
+              </label>
+              <label class="gs-field">再开价
+                <input id="g-rebuild" type="number" step="0.01" value="0" />
+              </label>
+            </div>
+            <div class="gs-toggles">
+              <label class="check"><input type="checkbox" id="g-match" /> 网格匹配</label>
+              <label class="check"><input type="checkbox" id="g-check-fill" /> 检查成交后再推进</label>
+              <label class="check"><input type="checkbox" id="g-xrxd" checked /> 除权自动调整</label>
+            </div>
+            <p class="gs-sec-desc">不配对时，提前挂单会在距离网格价 1.5% 内按网格价预埋。驱动和配对在创建后锁定。</p>
+          </section>
+        </div>
+      </div>
+
+      <footer class="gs-foot">
+        <p class="gs-foot-story" id="gs-foot-story"></p>
+        <div class="dialog-actions">
+          <button value="cancel" class="btn ghost" type="button" id="grid-cancel">取消</button>
+          <button class="btn primary" id="grid-save" type="button">保存</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="follow-dialog">
+    <form method="dialog" id="follow-form">
+      <h3>加入跟单</h3>
+      <p class="sub" id="follow-target-label"></p>
+      <label>
+        虚拟资金（元）
+        <input id="capital-input" type="number" min="10000" step="10000" value="1000000" />
+      </label>
+      <label>
+        跟单比例
+        <input id="ratio-input" type="number" min="0.1" max="1" step="0.1" value="1" />
+      </label>
+      <p class="sub" id="follow-preview-text">按对方仓位建仓。</p>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn ghost" type="button" id="follow-cancel">取消</button>
+        <button class="btn primary" id="follow-confirm" type="button">开始</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <form method="dialog" id="settings-form">
+      <h3>设置</h3>
+      <div class="settings-block">
+        <h4>数据源</h4>
+        <p class="sub">东财公开组合无需登录。</p>
+        <p class="sub" id="cookie-status"></p>
+        <label>
+          雪球 Cookie
+          <textarea id="cookie-input" rows="4" placeholder="打开 xueqiu.com 并登录，F12 → Network → 任意请求 → 复制 Cookie 整段"></textarea>
+        </label>
+      </div>
+      <div class="settings-block">
+        <h4>行情</h4>
+        <label>行情源
+          <select id="quote-source"></select>
+        </label>
+        <p class="sub">腾讯、新浪、东财。失败时自动换源。</p>
+      </div>
+      <div class="settings-block">
+        <h4>交易通道</h4>
+        <label>通道
+          <select id="broker-channel"></select>
+        </label>
+        <label>委托队列目录
+          <input id="orders-dir" placeholder="G:\跟单系统\data\orders" />
+        </label>
+        <p class="sub">选模拟鼠键后，委托写入该目录，由同花顺窗口鼠键执行。</p>
+        <div class="form-grid">
+          <label>EasyTHS Host <input id="easyths-host" placeholder="127.0.0.1" /></label>
+          <label>EasyTHS Port <input id="easyths-port" type="number" value="7648" /></label>
+          <label>EasyTHS API Key <input id="easyths-api-key" type="password" autocomplete="new-password" placeholder="留空则不修改/无密钥" /></label>
+          <label>EasyTHS 账户名 <input id="easyths-account" placeholder="多账户时填写，可空" /></label>
+        </div>
+        <p class="sub">模拟鼠键：先 <code>scripts\start_easyths.ps1</code>，再 <code>scripts\start_easyths_bridge.ps1</code></p>
+        <button class="btn ghost" type="button" id="broker-connect-btn">测试连接交易通道</button>
+      </div>
+      <div class="settings-block">
+        <h4>通用</h4>
+        <label class="check"><input type="checkbox" disabled /> 实时刷新持仓</label>
+        <label class="check"><input type="checkbox" disabled /> 条件成立仅提醒不下单</label>
+      </div>
+      <div class="settings-block">
+        <h4>风控 / 预警</h4>
+        <div class="form-grid">
+          <label>通达信预警文件/目录 <input id="risk-sign-file" placeholder="D:\new_tdx\T0002\signals" /></label>
+          <label>日最大委托数 <input id="risk-max-orders" type="number" value="20" /></label>
+          <label>单笔金额上限(元) <input id="risk-max-amount" type="number" value="500000" /></label>
+          <label>日亏暂停(元) <input id="risk-max-loss" type="number" value="50000" /></label>
+          <label>同码冷却秒 <input id="risk-code-cd" type="number" value="60" /></label>
+          <label>赞助门槛(元) <input id="risk-sponsor" type="number" value="1000000" /></label>
+          <label>时段起 <input id="risk-session-start" type="time" step="1" value="09:25:00" /></label>
+          <label>时段止 <input id="risk-session-end" type="time" step="1" value="15:00:00" /></label>
+        </div>
+        <div class="check-row">
+          <label class="check"><input type="checkbox" id="risk-trade-days" checked /> 仅交易日</label>
+          <label class="check"><input type="checkbox" id="risk-session" checked /> 仅交易时段</label>
+          <label class="check"><input type="checkbox" id="risk-sound" checked /> 触发蜂鸣</label>
+          <label class="check"><input type="checkbox" id="risk-confirm" checked /> 半自动确认</label>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn ghost" type="button" id="settings-cancel">关闭</button>
+        <button class="btn primary" id="settings-save" type="button">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" hidden></div>
+
+  <dialog id="alert-dialog">
+    <form method="dialog" id="alert-form">
+      <h3>预警设置</h3>
+      <input type="hidden" id="a-id" />
+      <div class="form-grid">
+        <label>名称 <input id="a-name" /></label>
+        <label>来源
+          <select id="a-source">
+            <option value="price">价格</option>
+            <option value="pct">涨跌幅%</option>
+            <option value="file">文件信号</option>
+          </select>
+        </label>
+        <label>代码
+          <div class="code-with-name">
+            <input id="a-code" class="js-stock-code" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="600616" autocomplete="off" />
+            <span class="code-name-hint"></span>
+          </div>
+        </label>
+        <label>信号名(文件) <input id="a-sign" placeholder="KDJ买入" /></label>
+        <label>方向
+          <select id="a-side"><option value="buy">买入</option><option value="sell">卖出</option><option value="notify">仅提醒</option></select>
+        </label>
+        <label>比较
+          <select id="a-compare"><option value="gte">≥</option><option value="lte">≤</option></select>
+        </label>
+        <label>触发价 <input id="a-price" type="number" step="0.01" value="0" /></label>
+        <label>触发涨跌% <input id="a-pct" type="number" step="0.1" value="3" /></label>
+        <label>数量/金额 <input id="a-qty" type="number" value="100" /></label>
+        <label>单位
+          <select id="a-unit"><option value="shares">股</option><option value="amount">元</option></select>
+        </label>
+        <label>冷却秒 <input id="a-cd" type="number" value="60" /></label>
+      </div>
+      <div class="check-row">
+        <label class="check"><input type="checkbox" id="a-auto" checked /> 自动下单</label>
+        <label class="check"><input type="checkbox" id="a-once" /> 仅触发一次</label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="a-cancel">取消</button>
+        <button type="button" class="btn primary" id="a-save">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="sl-dialog">
+    <form method="dialog">
+      <h3>止损止盈</h3>
+      <input type="hidden" id="sl-id" />
+      <div class="form-grid">
+        <label>代码
+          <div class="code-with-name">
+            <input id="sl-code" class="js-stock-code" data-name-target="sl-name" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="600616" autocomplete="off" />
+            <span class="code-name-hint"></span>
+          </div>
+        </label>
+        <label>名称 <input id="sl-name" placeholder="自动识别" /></label>
+        <label>成本价 <input id="sl-cost" type="number" step="0.01" /></label>
+        <label>数量 <input id="sl-qty" type="number" value="100" /></label>
+        <label><span class="down">止损%</span> <input id="sl-stop" type="number" step="0.1" value="5" /></label>
+        <label><span class="up">止盈%</span> <input id="sl-take" type="number" step="0.1" value="10" /></label>
+        <label><span class="down">止损价(0=关)</span> <input id="sl-stop-px" type="number" step="0.01" value="0" /></label>
+        <label><span class="up">止盈价(0=关)</span> <input id="sl-take-px" type="number" step="0.01" value="0" /></label>
+        <label>移动止盈回落% <input id="sl-trail" type="number" step="0.1" value="0" /></label>
+        <label class="check"><input type="checkbox" id="sl-trail-on" /> 启用移动止盈</label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="sl-cancel">取消</button>
+        <button type="button" class="btn primary" id="sl-save">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="cond-dialog">
+    <form method="dialog">
+      <h3>条件单</h3>
+      <input type="hidden" id="c-id" />
+      <div class="form-grid">
+        <label>代码
+          <div class="code-with-name">
+            <input id="c-code" class="js-stock-code" data-name-target="c-name" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="600616" autocomplete="off" />
+            <span class="code-name-hint"></span>
+          </div>
+        </label>
+        <label>名称 <input id="c-name" placeholder="自动识别" /></label>
+        <label>方向
+          <select id="c-side"><option value="buy">买入</option><option value="sell">卖出</option></select>
+        </label>
+        <label>类型
+          <select id="c-kind">
+            <option value="price">价格</option>
+            <option value="time">时间</option>
+            <option value="pct">当日涨跌幅</option>
+          </select>
+        </label>
+        <label>比较
+          <select id="c-compare"><option value="gte">≥</option><option value="lte">≤</option></select>
+        </label>
+        <label>触发价 <input id="c-trigger" type="number" step="0.01" /></label>
+        <label>触发涨跌% <input id="c-pct" type="number" step="0.1" value="0" /></label>
+        <label>触发时间 <input id="c-time" type="time" step="1" value="09:30:00" /></label>
+        <label>报价方式 <select id="c-px" class="js-px-type" data-px-default="last"></select></label>
+        <label>限价覆盖(0=按报价) <input id="c-limit" type="number" step="0.01" value="0" /></label>
+        <label>数量 <input id="c-qty" type="number" value="100" /></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="c-cancel">取消</button>
+        <button type="button" class="btn primary" id="c-save">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="disclaimer-dialog">
+    <form method="dialog" id="disclaimer-form">
+      <h3 id="disclaimer-title">使用协议与风险揭示</h3>
+      <pre id="disclaimer-text" class="disclaimer-text"></pre>
+      <label class="check"><input type="checkbox" id="disclaimer-agree" /> 我已阅读并同意以上条款</label>
+      <div class="dialog-actions">
+        <button type="button" class="btn primary" id="disclaimer-accept" disabled>进入系统</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="sponsor-dialog">
+    <form method="dialog">
+      <h3>赞助提醒</h3>
+      <p class="sub">当前账户权益已超过赞助门槛。本工具对超过门槛的用户建议支付年费赞助；此提醒不锁定功能。</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn primary" id="sponsor-ok">知道了</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="watch-dialog">
+    <form method="dialog">
+      <h3>自选股</h3>
+      <input type="hidden" id="w-id" />
+      <div class="form-grid">
+        <label>代码
+          <div class="code-with-name">
+            <input id="w-code" class="js-stock-code" data-name-target="w-name" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="600616" autocomplete="off" />
+            <span class="code-name-hint"></span>
+          </div>
+        </label>
+        <label>名称 <input id="w-name" placeholder="自动识别" /></label>
+        <label>标签 <input id="w-tag" /></label>
+        <label>高价提醒 <input id="w-high" type="number" step="0.01" value="0" /></label>
+        <label>低价提醒 <input id="w-low" type="number" step="0.01" value="0" /></label>
+        <label>备注 <input id="w-note" /></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="w-cancel">取消</button>
+        <button type="button" class="btn primary" id="w-save">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+
+  <dialog id="t0-dialog">
+    <form method="dialog" id="t0-form">
+      <header class="dlg-head">
+        <h3>T+0 设置</h3>
+        <button type="button" class="dlg-close" id="t0-close" aria-label="关闭">×</button>
+      </header>
+      <input type="hidden" id="t0-id" />
+      <p class="sub dlg-hint">相对基准价跌买涨卖；委托按市价即时成交。基准价填 0 则开盘后自动取现价。</p>
+      <div class="form-grid slim">
+        <label>代码
+          <div class="code-with-name">
+            <input id="t0-code" class="js-stock-code" data-name-target="t0-name" data-fill-price="t0-anchor" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="600616" autocomplete="off" />
+            <span class="code-name-hint"></span>
+          </div>
+        </label>
+        <label>名称 <input id="t0-name" placeholder="自动识别" /></label>
+        <label>基准价（元） <input id="t0-anchor" type="number" step="0.001" value="0" /></label>
+        <label>报价方式 <select id="t0-px" class="js-px-type" data-px-default="market"></select></label>
+        <label><span class="down">买跌%</span> <input id="t0-buy" type="number" step="0.1" value="1" /></label>
+        <label><span class="up">卖涨%</span> <input id="t0-sell" type="number" step="0.1" value="1" /></label>
+        <label>买入数量 <input id="t0-buy-qty" type="number" value="100" /></label>
+        <label>卖出数量 <input id="t0-sell-qty" type="number" value="0" title="0=与买入相同" /></label>
+        <label>每日最大轮次 <input id="t0-max-rounds" type="number" value="0" title="0=不限" /></label>
+        <label>冷却秒 <input id="t0-cooldown" type="number" value="3" /></label>
+        <label class="check"><input id="t0-session" type="checkbox" checked /> 仅交易时段</label>
+        <label>备注 <input id="t0-note" /></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" id="t0-cancel">取消</button>
+        <button type="button" class="btn primary" id="t0-save">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="formula-dialog"><form method="dialog">
+    <h3>公式下单</h3>
+    <input type="hidden" id="f-id" />
+    <div class="form-grid">
+      <label>公式/信号名 <input id="f-name" /></label>
+      <label>方向 <select id="f-side"><option value="buy">买入</option><option value="sell">卖出</option></select></label>
+      <label>数量 <input id="f-qty" type="number" value="100" /></label>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn ghost" id="f-cancel">取消</button>
+      <button type="button" class="btn primary" id="f-save">保存</button>
+    </div>
+  </form></dialog>
+
+  <dialog id="basket-dialog"><form method="dialog">
+    <h3>篮子</h3>
+    <input type="hidden" id="bsk-id" />
+    <div class="form-grid">
+      <label>名称 <input id="bsk-name" /></label>
+      <label>资金(权重用) <input id="bsk-capital" type="number" value="100000" /></label>
+    </div>
+    <label>成分 JSON 数组 [{"code":"510300.SH","side":"buy","qty":1000,"weight":0.5}]
+      <textarea id="bsk-legs" rows="5">[{"code":"510300.SH","side":"buy","qty":1000,"weight":1}]</textarea>
+    </label>
+    <div class="dialog-actions">
+      <button type="button" class="btn ghost" id="bsk-cancel">取消</button>
+      <button type="button" class="btn primary" id="bsk-save">保存</button>
+    </div>
+  </form></dialog>
+
+  <dialog id="board-dialog"><form method="dialog">
+    <h3>打板</h3>
+    <input type="hidden" id="bd-id" />
+    <div class="form-grid">
+      <label>代码
+        <div class="code-with-name">
+          <input id="bd-code" class="js-stock-code" data-name-target="bd-name" maxlength="6" inputmode="numeric" pattern="\d{6}" placeholder="600616" autocomplete="off" />
+          <span class="code-name-hint"></span>
+        </div>
+      </label>
+      <label>名称 <input id="bd-name" placeholder="自动识别" /></label>
+      <label><span class="up">涨幅阈值%</span> <input id="bd-pct" type="number" step="0.1" value="9.5" /></label>
+      <label>数量 <input id="bd-qty" type="number" value="100" /></label>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn ghost" id="bd-cancel">取消</button>
+      <button type="button" class="btn primary" id="bd-save">保存</button>
+    </div>
+  </form></dialog>
+
+  <dialog id="acct-dialog"><form method="dialog">
+    <h3>账户</h3>
+    <input type="hidden" id="acct-id" />
+    <div class="form-grid">
+      <label>名称 <input id="acct-label" /></label>
+      <label>通道 <input id="acct-broker" value="paper" /></label>
+      <label>本金 <input id="acct-capital" type="number" value="1000000" /></label>
+      <label>现金 <input id="acct-cash" type="number" value="1000000" /></label>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn ghost" id="acct-cancel">取消</button>
+      <button type="button" class="btn primary" id="acct-save">保存</button>
+    </div>
+  </form></dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

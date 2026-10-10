@@ -1,0 +1,281 @@
+<p align="center">
+  <a href="https://pypi.org/project/easyths/"><img src="https://img.shields.io/pypi/v/easyths?logo=pypi&logoColor=white&label=PyPI&color=blue" alt="PyPI Version"></a>
+  <a href="https://github.com/noimank/easyths"><img src="https://img.shields.io/badge/python-3.12-blue.svg?logo=python&logoColor=white" alt="Python Version"></a>
+  <a href="https://github.com/noimank/easyths/blob/main/LICENSE"><img src="https://img.shields.io/github/license/noimank/easyths?color=green" alt="License"></a>
+  <a href="https://github.com/noimank/easyths/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/noimank/easyths/ci.yml?branch=main&label=CI" alt="CI"></a>
+</p>
+
+<p align="center">
+  <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.115+-green?logo=fastapi" alt="FastAPI"></a>
+  <a href="https://pywinauto.readthedocs.io/"><img src="https://img.shields.io/badge/pywinauto-0.6.8+-orange?logoColor=white" alt="pywinauto"></a>
+  <a href="https://pydantic.dev/"><img src="https://img.shields.io/badge/Pydantic-2.10+-red?logo=pydantic" alt="Pydantic"></a>
+  <a href="https://www.uvicorn.org/"><img src="https://img.shields.io/badge/Uvicorn-0.32+-teal?logo=uvicorn&logoColor=white" alt="Uvicorn"></a>
+</p>
+
+# EasyTHS - 同花顺交易自动化系统
+
+基于 pywinauto 的同花顺交易软件自动化项目，提供 RESTful API 接口，通过操作队列确保高并发下的操作顺序和一致性。
+
+## 项目特点
+
+- **操作串行化**：所有 GUI 操作串行执行，避免并发冲突
+- **队列管理**：支持优先级的任务队列，确保操作顺序
+- **执行看门狗**：单操作硬超时熔断（默认 10 秒，可配置），界面卡死自动断连、后续操作快速失败，重连即恢复，队列不阻塞
+- **实时监控**：详细的日志记录和状态监控
+- **RESTful API**：完整的 HTTP 接口，支持各种语言集成
+- **多账户支持**：账户列表查询、原子切换与按账户定向执行，切换与操作在同一队列槽内原子完成
+- **内嵌 Web 控制台**：浏览器打开即用的操作台，操作表单由接口契约自动生成，无需安装任何前端依赖
+- **MCP 支持**：支持 Model Context Protocol，可被 AI 助手（如 Claude Code、Cursor）直接调用
+- **验证码识别**：内置 CRNN 模型，支持自定义微调适配特定验证码样式
+
+## 文档
+
+详细文档请访问：[https://noimank.github.io/easyths/](https://noimank.github.io/easyths/)
+
+- [安装指南](https://noimank.github.io/easyths/getting-started/installation/)
+- [基础用法](https://noimank.github.io/easyths/getting-started/basic-usage/)
+- [客户端设置](https://noimank.github.io/easyths/getting-started/ths-client/)
+- [Client SDK](https://noimank.github.io/easyths/getting-started/client-sdk/) - Python 客户端 SDK
+- [MCP 服务](https://noimank.github.io/easyths/getting-started/mcp-service/) - AI 助手集成指南
+- [验证码模型微调](#验证码模型微调) - 自定义验证码识别模型
+- [API 参考](https://noimank.github.io/easyths/api/)
+
+## 快速开始
+
+### 环境要求
+
+- Windows 10/11
+- Python 3.12
+- 同花顺交易客户端
+
+#### 请一定一定要根据项目要求设置下单客户端，否则不保证可用
+
+### 安装并使用
+
+```bash
+# 使用 uvx 一键运行服务端（推荐）,需要已经打开下单软件并登录进入页面
+uvx 'easyths[server]'
+
+# 或使用 pip 安装服务端
+pip install 'easyths[server]'
+# 获取config.toml配置，按需修改，不然走默认
+easyths --get_config
+# 运行
+easyths --config config.toml
+
+```
+
+注： 就是找到并打开下单软件（C:/同花顺远航版/transaction/xiadan.exe）即可，不运行同花顺看盘软件（当然初次运行还是需要同花顺的看盘软件来配置相关账号，配置账号之后，之后就只运行xiadan.exe软件即可）
+
+服务默认运行在 `http://127.0.0.1:7648`
+
+更多安装方式请参考 [安装指南](https://noimank.github.io/easyths/getting-started/installation/)。
+
+## 支持的操作
+
+| 操作                                               | 说明          | 参考操作耗时（秒） |
+|--------------------------------------------------|-------------|-----------|
+| **买入 (buy)**                                     | 股票买入委托      | 1.5~2.0   |
+| **卖出 (sell)**                                    | 股票卖出委托      | 1.5~2.0   |
+| **市价买入 (market_buy)** 1.7.0+版本支持                 | 市价买入委托      | 2.5~3.5   |
+| **市价卖出 (market_sell)** 1.7.0+版本支持                | 市价卖出委托      | 2.5~3.5   |
+| **持仓查询 (holding_query)**                         | 查询当前持仓      | 1.6~3.2   |
+| **资金查询 (funds_query)**                           | 查询账户资金      | 0.6~1.0   |
+| **委托查询 (order_query)**                           | 查询委托记录      | 2.8~3.3   |
+| **撤单 (order_cancel)**                            | 撤销委托        | 1.0~1.6   |
+| **历史委托查询 (historical_commission_query)** 模拟账号不支持 | 查询历史成交      | 2.8~3.3   |
+| **国债逆回购购买 (reverse_repo_buy)**                   | 购买国债逆回购     | 1.8~2.2   |
+| **国债逆回购年化利率查询 (reverse_repo_query)**             | 查询国债逆回购年化利率 | 0.9~1.3   |
+| **条件买入 (condition_buy)**                         | 设置条件买入策略    | 2.4~3.1   |
+| **条件卖出 (condition_sell)** 1.7.2+版本支持             | 设置条件卖出策略    | 2.6~4.1   |
+| **止盈止损 (stop_loss_profit)**                      | 设置止盈止损策略    | 2.6~3.2   |
+| **条件单查询 (condition_order_query)**                | 查询现有的条件单    | 1.7~2.1   |
+| **条件单删除 (condition_order_cancel)**               | 删除指定条件单     | 2.0~2.5   |
+| **账户列表查询 (account_query)**                     | 获取所有已登录账户（含当前账户） | -         |
+| **账户切换 (account_switch)**                        | 切换当前交易账户（幂等，含有效性校验） | -  |
+
+**多账户**：交易/查询接口均支持可选 `account_name` 参数——显式传入时，
+服务端先切换到该账户再执行操作（两步原子完成），**操作必然落在该账户上**；
+不传则默认使用当前账户（`account_query`/`account_switch` 不适用此参数）。
+两种方式的语义区别详见
+[API 文档 - 多账户支持](https://noimank.github.io/easyths/getting-started/api/#多账户支持)。
+
+```python
+# 显式指定账户：必然落在「模拟账户」上
+result = client.buy("000001", 10.50, 100, account_name="模拟账户")
+# 终态结果携带 current_used_account，可核对实际落在的账户
+assert result["current_used_account"] == "模拟账户"
+```
+
+详细的 API 接口和参数说明请参考 [API 文档](https://noimank.github.io/easyths/getting-started/api/)。
+
+## 快速示例
+
+### 使用 Web 控制台（零代码）
+
+服务启动后，浏览器打开 `http://127.0.0.1:7648/` 即可使用内嵌控制台：
+
+- 操作表单由 `/api/v1/operations/` 返回的参数契约（JSON Schema）自动生成，新增操作插件无需改动控制台
+- 支持执行前指定账户（`account_name` 指令）与优先级，结果以表格/键值形式渲染
+- 顶栏实时展示服务健康、当前账户与队列统计，并提供重连入口
+
+认证方面与 API 调用方一致：服务启用 API Key 时，首次访问会弹出登录页，输入
+`config.toml [api] key` 中配置的密钥即可（仅保存在本机浏览器 localStorage）；
+控制台页面与静态资源本身不含敏感数据，公开访问，所有数据请求仍需通过
+`Authorization: Bearer <key>` 校验。
+
+### 使用 Python SDK（推荐）
+
+```bash
+# 仅安装客户端 SDK（轻量级，跨平台）
+pip install easyths
+```
+
+```python
+from easyths import TradeClient
+
+# 创建客户端
+with TradeClient(host="127.0.0.1", port=7648, api_key="your-api-key") as client:
+    # 买入股票
+    result = client.buy("000001", 10.50, 100)
+    if result["success"]:
+        print("买入成功")
+
+    # 查询持仓
+    result = client.query_holdings()
+    holdings = result["data"]  # JSON 记录列表
+    print(f"持仓数: {len(holdings)}")
+```
+
+更多 SDK 用法请参考 [Client SDK 文档](https://noimank.github.io/easyths/getting-started/client-sdk/)。
+
+### 使用 cURL API
+
+```bash
+# 启动服务
+uvx 'easyths[server]'
+
+# 买入股票（参数平铺在请求体；启用 API Key 时需带 Authorization 头）
+curl -X POST http://127.0.0.1:7648/api/v1/operations/buy \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-api-key" \
+  -d '{"stock_code": "000001", "price": 10.50, "quantity": 100}'
+# → 提交受理：{"success": null, "status": "queued", "data": {"operation_id": "...", ...}}
+
+# 阻塞等待操作终态结果（拿到上一步的 operation_id）
+curl http://127.0.0.1:7648/api/v1/operations/<operation_id>/result
+
+# 查询持仓
+curl -X POST http://127.0.0.1:7648/api/v1/operations/holding_query \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+更多使用示例请参考 [基础用法](https://noimank.github.io/easyths/getting-started/basic-usage/)。
+
+### 使用 MCP（AI 助手集成）
+
+EasyTHS 支持 [MCP (Model Context Protocol)](https://modelcontextprotocol.io/)，可以让 Claude Code 等 AI 助手直接调用交易功能。
+
+**Claude Code 连接示例**（原生支持远程 HTTP MCP，一条命令完成）：
+
+```bash
+claude mcp add --transport http easyths http://localhost:7648/api/mcp-server \
+  --header "Authorization: Bearer your-api-key"
+```
+
+> 未启用 API Key 认证时，省略 `--header` 参数即可。
+
+Cursor 等其他原生支持 HTTP MCP 的客户端同理：直连
+`http://localhost:7648/api/mcp-server/`，在请求头携带
+`Authorization: Bearer <key>`。Claude Desktop（桌面应用）配置文件不支持自定义
+认证头，需 [mcp-remote](https://github.com/geelen/mcp-remote) 桥接，详见
+[MCP 服务文档](https://noimank.github.io/easyths/getting-started/mcp-service/)。
+
+配置后，你可以直接对话：
+- "查询我的账户资金"
+- "买入 100 股平安银行，价格 10.5 元"
+- "当贵州茅台低于 1500 元时买入 100 股"
+
+## 系统要求
+
+- **操作系统**: Windows 10/11（必须，pywinauto 要求）
+- **Python**: 3.12
+- **交易软件**: 同花顺交易客户端
+
+## 同花顺客户端设置
+
+> 详细的配置步骤请查看 [客户端设置指南](https://noimank.github.io/easyths/getting-started/ths-client/)
+
+必须完成的设置：
+1. 关闭悬浮工具栏
+2. 关闭所有交易确认对话框
+3. 开启"切换页面清空代码"
+4. 清空默认买入/卖出价格
+
+这些设置对于自动化交易系统的正常运行至关重要，请务必按照文档完成配置。
+
+## 验证码模型微调
+
+EasyTHS 内置 CRNN 验证码识别模型，支持微调以适配特定的验证码样式。
+
+### 快速微调
+
+```bash
+cd captcha_model
+
+# 1. 生成训练数据
+python data_generate.py --num_samples 2000 --output_dir data/train
+python data_generate.py --num_samples 500 --output_dir data/val
+python data_generate.py --num_samples 500 --output_dir data/test
+
+# 2. 将预训练模型放到 outputs 目录
+# cp your_pretrained_model.pt outputs/best_model.pt
+
+# 3. 开始微调
+python train.py --config config_finetune.yaml
+
+# 4. 评估模型
+python eval.py --model outputs/best_model.pt
+```
+
+### 关键配置
+
+微调使用 `config_finetune.yaml`，主要区别于从头训练：
+
+- **更低学习率**：`0.00001` vs `0.0001`，避免破坏预训练权重
+- **固定学习率调度**：`constant` 调度器，适合微调稳定阶段
+- **更强数据增强**：噪声强度更高，提升泛化能力
+
+详细配置说明和高级用法请参考 [captcha_model/README.md](captcha_model/README.md)。
+
+## 版本号说明
+
+本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)（Semantic Versioning）规范，版本号格式为 `MAJOR.MINOR.PATCH`：
+
+- **PATCH**（如 `1.6.3` → `1.6.4`）：问题修复、性能优化等，不涉及功能变更，可放心升级
+- **MINOR**（如 `1.6.3` → `1.7.0`）：新增功能或调整已有功能的行为，向下兼容
+- **MAJOR**（如 `1.7.0` → `2.0.0`）：不兼容的 API 变更，升级需注意迁移
+
+## 安全须知
+
+- 本系统仅供学习和研究使用
+- 自动化交易存在风险，请谨慎使用
+- 建议先在模拟环境测试
+- 请保护好 API 密钥安全
+
+## 许可证
+
+MIT License
+
+## 联系方式
+
+- **作者**: noimank
+- **邮箱**: noimank@163.com
+- **仓库**: [https://github.com/noimank/easyths](https://github.com/noimank/easyths)
+
+---
+
+<div align="center">
+  <p>如果这个项目对您有帮助，请给个 ⭐ Star 支持一下！</p>
+</div>
